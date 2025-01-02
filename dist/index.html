@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>智创视界</title>
+  <script type="module" crossorigin src="./assets/index-DhfnFgyE.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DYZNjaI5.css">
+</head>
+<body>
+  <div id="app">
+    <div class="titlebar">
+      <div class="titlebar-drag">智创视界</div>
+      <div class="window-controls">
+        <button class="minimize" id="minimize-btn">
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <rect fill="currentColor" width="10" height="1" x="1" y="5.5"/>
+          </svg>
+        </button>
+        <button class="maximize" id="maximize-btn">
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <rect fill="none" stroke="currentColor" width="9" height="9" x="1.5" y="1.5"/>
+          </svg>
+        </button>
+        <button class="close" id="close-btn">
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <path fill="none" stroke="currentColor" stroke-width="1" d="M3,3 L9,9 M9,3 L3,9"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="drop-zone" class="drop-zone">
+      <div class="drop-message">
+        <div class="drop-icon">
+          <svg viewBox="0 0 24 24" width="48" height="48">
+            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+        </div>
+        拖放文件到这里
+        <div class="supported-types">
+          支持的文件类型: 图片 (JPG, PNG, GIF, BMP, WEBP), PDF
+        </div>
+      </div>
+    </div>
+
+    <div id="viewer-container" class="viewer-container">
+      <div id="image-container" class="image-container">
+        <img id="displayed-image" />
+      </div>
+    </div>
+
+    <div id="status-bar" class="status-bar">
+      <div class="status-text"></div>
+      <div class="file-count"></div>
+    </div>
+  </div>
+
+</body>
+</html> 
