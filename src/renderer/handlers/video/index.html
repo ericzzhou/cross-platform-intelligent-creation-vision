@@ -17,31 +17,39 @@
 
   <div class="player-container">
     <video id="video"></video>
-    <div class="loading">加载中...</div>
+    <div class="loading hidden">加载中...</div>
     <div class="error hidden">加载失败</div>
-  </div>
-
-  <div class="controls">
-    <div class="progress">
-      <div class="progress-bar">
-        <div class="progress-current"></div>
-        <div class="progress-hover"></div>
+    
+    <!-- 视频控制栏 -->
+    <div class="controls">
+      <div class="progress">
+        <div class="progress-bar">
+          <div class="progress-loaded"></div>
+          <div class="progress-played"></div>
+        </div>
+        <div class="preview hidden">
+          <video></video>
+          <div class="time"></div>
+        </div>
       </div>
-      <div class="time">
-        <span class="current-time">00:00</span>
-        <span class="duration">00:00</span>
+      
+      <div class="buttons">
+        <button id="play-pause" title="播放/暂停">▶</button>
+        <div class="time">
+          <span id="current-time">00:00</span>
+          <span>/</span>
+          <span id="total-time">00:00</span>
+        </div>
+        <div class="volume">
+          <button id="mute" title="静音">🔊</button>
+          <div class="volume-slider">
+            <div class="volume-bar"></div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button id="pip" title="画中画">⎚</button>
+        <button id="fullscreen" title="全屏">⊞</button>
       </div>
-    </div>
-
-    <div class="buttons">
-      <button id="play-pause" title="播放/暂停">▶</button>
-      <div class="volume-control">
-        <button id="mute" title="静音">🔊</button>
-        <input type="range" id="volume" min="0" max="100" value="100">
-      </div>
-      <div class="spacer"></div>
-      <button id="pip" title="画中画">⎵</button>
-      <button id="fullscreen" title="全屏">⤢</button>
     </div>
   </div>
 

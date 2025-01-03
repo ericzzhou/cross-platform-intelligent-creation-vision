@@ -1,66 +1,42 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// 从命令行参数获取处理器 ID 和通道
-const handlerId = process.argv.find(arg => arg.startsWith('--handler-id=')).split('=')[1];
-const channels = JSON.parse(process.argv.find(arg => arg.startsWith('--channels=')).split('=')[1]);
+// 获取实例 ID
+const instanceId = new URLSearchParams(window.location.search).get('instanceId');
 
-function handleError(action, err) {
-  console.error(`Failed to ${action}:`, err);
-}
-
+// 视频播放器 API
 contextBridge.exposeInMainWorld('videoAPI', {
-  // 事件监听
-  onVideoLoaded: (callback) => {
-    const handler = (_, data) => {
-      try {
-        callback(data);
-      } catch (err) {
-        handleError('handle video loaded', err);
-      }
-    };
-    ipcRenderer.on('file:loaded', handler);
-    return () => ipcRenderer.removeListener('file:loaded', handler);
+  // 加载视频
+  loadVideo: (filePath) => {
+    return ipcRenderer.invoke(`video:load:${instanceId}`, filePath);
   },
 
-  onError: (callback) => {
-    const handler = (_, error) => {
-      try {
-        callback(error);
-      } catch (err) {
-        handleError('handle error', err);
-      }
-    };
-    ipcRenderer.on('file:error', handler);
-    return () => ipcRenderer.removeListener('file:error', handler);
+  // 保存截图
+  saveScreenshot: (data, name) => {
+    return ipcRenderer.invoke(`video:screenshot:${instanceId}`, { data, name });
   },
 
   // 窗口控制
-  minimizeWindow: async () => {
-    try {
-      await ipcRenderer.invoke(channels.minimize);
-    } catch (err) {
-      handleError('minimize window', err);
-    }
+  minimizeWindow: () => {
+    ipcRenderer.send('window:minimize', instanceId);
   },
-  maximizeWindow: async () => {
-    try {
-      await ipcRenderer.invoke(channels.maximize);
-    } catch (err) {
-      handleError('maximize window', err);
-    }
+
+  maximizeWindow: () => {
+    ipcRenderer.send('window:maximize', instanceId);
   },
-  closeWindow: async () => {
-    try {
-      await ipcRenderer.invoke(channels.close);
-    } catch (err) {
-      handleError('close window', err);
-    }
+
+  closeWindow: () => {
+    ipcRenderer.send('window:close', instanceId);
   },
-  toggleFullscreen: async () => {
-    try {
-      await ipcRenderer.invoke(channels.fullscreen);
-    } catch (err) {
-      handleError('toggle fullscreen', err);
-    }
+
+  // 错误处理
+  onError: (callback) => {
+    ipcRenderer.on(`video:error:${instanceId}`, (event, message) => {
+      callback(message);
+    });
   }
+});
+
+// 禁用右键菜单
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
 }); 

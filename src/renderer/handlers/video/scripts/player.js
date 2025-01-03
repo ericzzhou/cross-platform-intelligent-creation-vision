@@ -2,43 +2,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const video = document.getElementById('video');
   const loading = document.querySelector('.loading');
   const error = document.querySelector('.error');
-  const progressBar = document.querySelector('.progress-bar');
-  const progressCurrent = document.querySelector('.progress-current');
-  const progressHover = document.querySelector('.progress-hover');
-  const currentTime = document.querySelector('.current-time');
-  const duration = document.querySelector('.duration');
+  const controls = document.querySelector('.controls');
+  
+  // 播放控制
   const playPauseBtn = document.getElementById('play-pause');
+  const progressBar = document.querySelector('.progress-bar');
+  const progressPlayed = document.querySelector('.progress-played');
+  const progressLoaded = document.querySelector('.progress-loaded');
+  const preview = document.querySelector('.preview');
+  const previewVideo = preview.querySelector('video');
+  const previewTime = preview.querySelector('.time');
+  const currentTime = document.getElementById('current-time');
+  const totalTime = document.getElementById('total-time');
+  
+  // 音量控制
   const muteBtn = document.getElementById('mute');
-  const volumeSlider = document.getElementById('volume');
+  const volumeSlider = document.querySelector('.volume-slider');
+  const volumeBar = document.querySelector('.volume-bar');
+  
+  // 其他控制
   const pipBtn = document.getElementById('pip');
   const fullscreenBtn = document.getElementById('fullscreen');
 
-  // 窗口控制
-  document.getElementById('minimize').addEventListener('click', () => {
-    window.videoAPI.minimizeWindow();
-  });
-  
-  document.getElementById('maximize').addEventListener('click', () => {
-    window.videoAPI.maximizeWindow();
-  });
-  
-  document.getElementById('close').addEventListener('click', () => {
-    window.videoAPI.closeWindow();
-  });
-
-  // 视频加载
-  window.videoAPI.onVideoLoaded(({ path, name }) => {
-    loading.classList.add('hidden');
-    error.classList.add('hidden');
-    video.src = path;
-    document.title = name;
-  });
-
+  // 初始化视频加载
   window.videoAPI.onError((message) => {
     loading.classList.add('hidden');
     error.classList.remove('hidden');
-    error.textContent = `加载失败: ${message}`;
+    error.textContent = message;
   });
+
+  // 时间格式化
+  function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
 
   // 播放控制
   playPauseBtn.addEventListener('click', () => {
@@ -51,56 +53,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   video.addEventListener('play', () => {
     playPauseBtn.textContent = '⏸';
+    playPauseBtn.title = '暂停';
   });
 
   video.addEventListener('pause', () => {
     playPauseBtn.textContent = '▶';
-  });
-
-  // 音量控制
-  muteBtn.addEventListener('click', () => {
-    video.muted = !video.muted;
-    muteBtn.textContent = video.muted ? '🔇' : '🔊';
-  });
-
-  volumeSlider.addEventListener('input', () => {
-    video.volume = volumeSlider.value / 100;
-    if (video.volume === 0) {
-      muteBtn.textContent = '🔇';
-    } else {
-      muteBtn.textContent = '🔊';
-    }
+    playPauseBtn.title = '播放';
   });
 
   // 进度条控制
-  function formatTime(seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    if (h > 0) {
-      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  }
-
   video.addEventListener('loadedmetadata', () => {
-    duration.textContent = formatTime(video.duration);
+    totalTime.textContent = formatTime(video.duration);
   });
 
   video.addEventListener('timeupdate', () => {
+    // 更新播放进度
     const progress = (video.currentTime / video.duration) * 100;
-    progressCurrent.style.width = `${progress}%`;
+    progressPlayed.style.width = `${progress}%`;
     currentTime.textContent = formatTime(video.currentTime);
   });
 
+  video.addEventListener('progress', () => {
+    // 更新缓冲进度
+    if (video.buffered.length > 0) {
+      const buffered = video.buffered.end(video.buffered.length - 1);
+      const progress = (buffered / video.duration) * 100;
+      progressLoaded.style.width = `${progress}%`;
+    }
+  });
+
+  // 进度条预览
+  let previewTimeout;
   progressBar.addEventListener('mousemove', (e) => {
     const rect = progressBar.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
-    progressHover.style.transform = `scaleX(${pos})`;
+    
+    // 显示预览
+    preview.classList.remove('hidden');
+    preview.style.left = `${e.clientX}px`;
+    
+    // 设置预览时间
+    const time = video.duration * pos;
+    previewTime.textContent = formatTime(time);
+    
+    // 更新预览画面
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(() => {
+      previewVideo.currentTime = time;
+    }, 100);
   });
 
   progressBar.addEventListener('mouseleave', () => {
-    progressHover.style.transform = 'scaleX(0)';
+    preview.classList.add('hidden');
   });
 
   progressBar.addEventListener('click', (e) => {
@@ -109,55 +113,28 @@ document.addEventListener('DOMContentLoaded', () => {
     video.currentTime = pos * video.duration;
   });
 
-  // 画中画
-  pipBtn.addEventListener('click', async () => {
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-      } else {
-        await video.requestPictureInPicture();
-      }
-    } catch (err) {
-      console.error('PiP Failed:', err);
+  // 音量控制
+  let lastVolume = 1;
+  muteBtn.addEventListener('click', () => {
+    if (video.volume > 0) {
+      lastVolume = video.volume;
+      video.volume = 0;
+    } else {
+      video.volume = lastVolume;
     }
   });
 
-  // 全屏
-  fullscreenBtn.addEventListener('click', () => {
-    window.videoAPI.toggleFullscreen();
+  video.addEventListener('volumechange', () => {
+    volumeBar.style.width = `${video.volume * 100}%`;
+    muteBtn.textContent = video.volume === 0 ? '🔇' : '🔊';
+    muteBtn.title = video.volume === 0 ? '取消静音' : '静音';
   });
 
-  // 键盘快捷键
-  window.addEventListener('keydown', (e) => {
-    switch(e.key) {
-      case ' ':
-        e.preventDefault();
-        if (video.paused) {
-          video.play();
-        } else {
-          video.pause();
-        }
-        break;
-      case 'ArrowLeft':
-        video.currentTime = Math.max(video.currentTime - 5, 0);
-        break;
-      case 'ArrowRight':
-        video.currentTime = Math.min(video.currentTime + 5, video.duration);
-        break;
-      case 'ArrowUp':
-        video.volume = Math.min(video.volume + 0.1, 1);
-        volumeSlider.value = video.volume * 100;
-        break;
-      case 'ArrowDown':
-        video.volume = Math.max(video.volume - 0.1, 0);
-        volumeSlider.value = video.volume * 100;
-        break;
-      case 'f':
-        window.videoAPI.toggleFullscreen();
-        break;
-      case 'Escape':
-        window.videoAPI.closeWindow();
-        break;
-    }
+  volumeSlider.addEventListener('click', (e) => {
+    const rect = volumeSlider.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    video.volume = Math.max(0, Math.min(1, pos));
   });
+
+  // 继续实现其他功能...
 }); 
