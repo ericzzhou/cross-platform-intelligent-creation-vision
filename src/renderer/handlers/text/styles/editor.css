@@ -59,8 +59,41 @@ body {
   transition: background-color 0.2s;
   color: var(--title-bar-text);
   opacity: 0.8;
+  padding: 0;
+  position: relative;
 }
 
+/* 最大化按钮状态切换 */
+.window-controls .maximize {
+  position: relative;
+}
+
+.window-controls .maximize i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s;
+}
+
+.window-controls .maximize .restore-icon {
+  opacity: 0;
+}
+
+.window-controls .maximize .maximize-icon {
+  opacity: 1;
+}
+
+/* 最大化状态 */
+.window-controls .maximize.maximized .restore-icon {
+  opacity: 1;
+}
+
+.window-controls .maximize.maximized .maximize-icon {
+  opacity: 0;
+}
+
+/* 按钮悬停效果 */
 .window-controls button:hover {
   background: rgba(255, 255, 255, 0.1);
   opacity: 1;

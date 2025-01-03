@@ -212,6 +212,12 @@ class TextHandler extends BaseHandler {
       // 更新修改状态
       this.modified = false;
       this.updateTitle();
+
+      // 获取并发送最新的文件信息
+      const fileInfo = await this.getFileInfo();
+      if (fileInfo && this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:info', fileInfo);
+      }
       
       return true;
     } catch (error) {
@@ -242,7 +248,7 @@ class TextHandler extends BaseHandler {
     
     const fileName = this.filePath ? path.basename(this.filePath) : '未命名';
     const filePath = this.filePath ? `[${this.filePath}]` : '';
-    const title = this.modified ? `*${fileName}${filePath}` : `${fileName}${filePath}`;
+    const title = this.modified ? `* ${fileName} ${filePath}` : `${fileName} ${filePath}`;
     
     // 更新窗口标题和任务栏标题
     this.window.setTitle(title);
@@ -274,8 +280,10 @@ class TextHandler extends BaseHandler {
       if (this.window && !this.window.isDestroyed()) {
         if (this.window.isMaximized()) {
           this.window.unmaximize();
+          this.window.webContents.send('window:maximize', false);
         } else {
           this.window.maximize();
+          this.window.webContents.send('window:maximize', true);
         }
       }
     });

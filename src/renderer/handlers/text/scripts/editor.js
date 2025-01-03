@@ -165,6 +165,13 @@ class TextEditor {
     window.textAPI.onError((error) => {
       console.error('File error:', error);
     });
+
+    // 监听文件信息更新
+    window.textAPI.onFileChange((info) => {
+      if (info) {
+        this.updateFileInfo(info);
+      }
+    });
   }
 
   updateLineNumbers() {
@@ -213,8 +220,16 @@ class TextEditor {
     if (!this.modified) return;
     
     try {
-      await window.textAPI.saveFile(this.editor.value);
-      this.setModified(false);
+      const success = await window.textAPI.saveFile(this.editor.value);
+      if (success) {
+        this.setModified(false);
+        
+        // 获取并更新最新的文件信息
+        const fileInfo = await window.textAPI.getFileInfo();
+        if (fileInfo) {
+          this.updateFileInfo(fileInfo);
+        }
+      }
     } catch (error) {
       console.error('保存失败:', error);
     }
@@ -266,12 +281,16 @@ class TextEditor {
 
   initWindowControls() {
     // 窗口控制按钮事件
+    const maximizeButton = document.querySelector('.maximize');
+    
     document.querySelector('.minimize').addEventListener('click', () => {
       window.textAPI.windowControl.minimize();
     });
 
-    document.querySelector('.maximize').addEventListener('click', () => {
+    maximizeButton.addEventListener('click', () => {
       window.textAPI.windowControl.maximize();
+      // 切换最大化按钮的状态
+      maximizeButton.classList.toggle('maximized');
     });
 
     document.querySelector('.close').addEventListener('click', () => {
@@ -283,6 +302,11 @@ class TextEditor {
       if (e.key === 'Escape') {
         window.textAPI.windowControl.close();
       }
+    });
+
+    // 监听窗口最大化状态变化
+    window.textAPI.onMaximizeChange((isMaximized) => {
+      maximizeButton.classList.toggle('maximized', isMaximized);
     });
   }
 

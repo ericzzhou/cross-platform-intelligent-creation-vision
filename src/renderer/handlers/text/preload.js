@@ -29,5 +29,8 @@ contextBridge.exposeInMainWorld('textAPI', {
   setModified: (modified) => ipcRenderer.send(channels.modified, modified),
   onTitleUpdate: (callback) => {
     ipcRenderer.on('title:update', (_, title) => callback(title));
+  },
+  onMaximizeChange: (callback) => {
+    ipcRenderer.on('window:maximize', (_, isMaximized) => callback(isMaximized));
   }
 }); 
