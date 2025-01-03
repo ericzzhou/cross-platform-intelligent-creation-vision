@@ -252,6 +252,41 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTransform();
   });
 
+  // 还原按钮 - 重置到初始状态
+  document.getElementById('reset').addEventListener('click', () => {
+    // 重置所有变换
+    rotation = 0;
+    translateX = 0;
+    translateY = 0;
+    
+    // 根据图片尺寸计算初始缩放比例
+    const width = image.naturalWidth;
+    const height = image.naturalHeight;
+    
+    if (width > container.clientWidth || height > container.clientHeight) {
+      // 如果图片超出容器，计算适合的缩放比例
+      const scaleX = container.clientWidth / width;
+      const scaleY = container.clientHeight / height;
+      scale = Math.min(scaleX, scaleY);
+    } else {
+      // 如果图片小于容器，保持原始大小
+      scale = 1;
+    }
+    
+    updateTransform();
+  });
+
+  // 实际大小按钮 - 1:1显示
+  document.getElementById('actual-size').addEventListener('click', () => {
+    // 设置为原始大小
+    scale = 1;
+    // 保持当前旋转角度不变
+    // 居中显示
+    centerImage();
+    updateTransform();
+  });
+
+  // 旋转按钮
   document.getElementById('rotate-left').addEventListener('click', () => {
     rotateImage(-90);
   });
@@ -260,12 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
     rotateImage(90);
   });
 
-  document.getElementById('fit-screen').addEventListener('click', initializeImage);
-
-  document.getElementById('actual-size').addEventListener('click', () => {
-    scale = 1;
-    centerImage();
-    updateTransform();
+  // 适应屏幕按钮
+  document.getElementById('fit-screen').addEventListener('click', () => {
+    initializeImage();
   });
 
   // 键盘快捷键
@@ -287,23 +319,15 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       case '0':
         if (e.ctrlKey) {
-          scale = 1;
-          centerImage();
-          updateTransform();
+          // Ctrl + 0 重置到初始状态
+          document.getElementById('reset').click();
         }
         break;
-      case 'ArrowLeft':
+      case '1':
         if (e.ctrlKey) {
-          rotateImage(-90);
+          // Ctrl + 1 显示实际大小
+          document.getElementById('actual-size').click();
         }
-        break;
-      case 'ArrowRight':
-        if (e.ctrlKey) {
-          rotateImage(90);
-        }
-        break;
-      case 'f':
-        toggleFullscreen();
         break;
       case 'r':
         if (e.ctrlKey) {
@@ -312,12 +336,17 @@ document.addEventListener('DOMContentLoaded', () => {
           rotateImage(-90);
         }
         break;
+      case 'f':
+        toggleFullscreen();
+        break;
       case 'Home':
+        // 适应屏幕
         initializeImage();
         break;
       case ' ':
+        // 在实际大小和适应屏幕之间切换
         if (scale === 1) {
-          zoomImage(2); // 空格键快速放大
+          initializeImage();
         } else {
           scale = 1;
           centerImage();
