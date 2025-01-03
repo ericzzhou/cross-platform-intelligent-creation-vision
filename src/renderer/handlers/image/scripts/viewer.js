@@ -221,22 +221,34 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 缩放图片
-  function zoomImage(newScale, centerX = null, centerY = null) {
+  function zoomImage(newScale, mouseX = null, mouseY = null) {
     const oldScale = scale;
     scale = Math.max(0.1, Math.min(5, newScale));
     
     if (scale !== oldScale) {
-      if (centerX === null || centerY === null) {
-        // 以图片中心为原点缩放
-        const rect = image.getBoundingClientRect();
-        centerX = rect.left + rect.width / 2;
-        centerY = rect.top + rect.height / 2;
-      }
+      // 获取图片当前的变换后位置和尺寸
+      const rect = image.getBoundingClientRect();
       
-      // 计算缩放后的位置，保持缩放中心点不变
-      const scaleChange = scale / oldScale;
-      translateX = centerX - (centerX - translateX) * scaleChange;
-      translateY = centerY - (centerY - translateY) * scaleChange;
+      if (mouseX === null || mouseY === null) {
+        // 默认以图片中心为原点缩放
+        mouseX = rect.left + rect.width / 2;
+        mouseY = rect.top + rect.height / 2;
+      }
+
+      // 计算鼠标相对于图片变换原点的位置
+      const pivotX = rect.left + rect.width / 2 + translateX;
+      const pivotY = rect.top + rect.height / 2 + translateY;
+      
+      // 计算鼠标相对于变换原点的偏移
+      const relativeX = mouseX - pivotX;
+      const relativeY = mouseY - pivotY;
+      
+      // 计算缩放比例变化
+      const scaleFactor = scale / oldScale;
+      
+      // 调整偏移量，保持鼠标指向的点不变
+      translateX += relativeX * (1 - scaleFactor);
+      translateY += relativeY * (1 - scaleFactor);
       
       updateTransform();
     }
