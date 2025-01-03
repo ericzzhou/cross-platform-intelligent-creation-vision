@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>文本查看器</title>
+  <link rel="stylesheet" href="styles/editor.css">
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title"></div>
+    <div class="window-controls">
+      <button class="minimize">─</button>
+      <button class="maximize">□</button>
+      <button class="close">×</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索...">
+      <input type="text" id="replaceInput" placeholder="替换...">
+      <button id="findPrev">↑</button>
+      <button id="findNext">↓</button>
+      <button id="replace">替换</button>
+      <button id="replaceAll">全部替换</button>
+    </div>
+    <div class="font-controls">
+      <button id="fontDecrease">A-</button>
+      <button id="fontIncrease">A+</button>
+    </div>
+  </div>
+
+  <div class="editor-container">
+    <div class="line-numbers"></div>
+    <textarea id="editor" spellcheck="false"></textarea>
+  </div>
+
+  <div class="status-bar">
+    <span class="cursor-position">行: 1, 列: 1</span>
+    <span class="encoding">UTF-8</span>
+    <span class="file-type">TEXT</span>
+    <span class="save-status"></span>
+  </div>
+
+  <script src="scripts/editor.js"></script>
+</body>
+</html> 

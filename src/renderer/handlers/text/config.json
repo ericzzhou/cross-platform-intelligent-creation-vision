@@ -1,0 +1,4 @@
+{
+  "name": "文本查看器",
+  "extensions": [".txt", ".log", ".ini", ".conf"]
+} 
