@@ -183,41 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     isDragging = false;
     image.style.cursor = 'grab';
-    
-    if (Math.abs(velocityX) < 0.5 && Math.abs(velocityY) < 0.5) {
-      return;
-    }
-    
-    // 添加惯性
-    const friction = 0.95;
-    let lastTimestamp = null;
-    
-    function animate(timestamp) {
-      if (!lastTimestamp) {
-        lastTimestamp = timestamp;
-        animationFrame = requestAnimationFrame(animate);
-        return;
-      }
-      
-      translateX += velocityX;
-      translateY += velocityY;
-      
-      velocityX *= friction;
-      velocityY *= friction;
-      
-      if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-        image.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        return;
-      }
-      
-      updateTransform();
-      lastTimestamp = timestamp;
-      animationFrame = requestAnimationFrame(animate);
-    }
-    
-    animationFrame = requestAnimationFrame(animate);
   });
 
   // 缩放图片
@@ -249,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 调整偏移量，保持鼠标指向的点不变
       translateX += relativeX * (1 - scaleFactor);
       translateY += relativeY * (1 - scaleFactor);
-      
+
       updateTransform();
     }
   }
