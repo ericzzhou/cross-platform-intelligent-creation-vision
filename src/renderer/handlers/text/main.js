@@ -1,58 +1,61 @@
-const { BrowserWindow, dialog } = require('electron');
+const BaseHandler = require('../../../handlers/base');
 const path = require('path');
 const fs = require('fs').promises;
-const { BaseHandler } = require('../../../handlers/base');
 
 class TextHandler extends BaseHandler {
-  constructor() {
-    super();
-    this.supportedTypes = [
-      '.txt', '.log', '.md', '.json', '.xml',
-      '.yml', '.yaml', '.ini', '.conf',
-      '.js', '.ts', '.py', '.java', '.c', '.cpp', '.h',
-      '.css', '.scss', '.less', '.html', '.htm'
-    ];
-    this.window = null;
-    this.currentFile = null;
-  }
-
-  async open(filePath) {
-    this.currentFile = filePath;
-
-    this.window = new BrowserWindow({
+  async initialize() {
+    const channels = this.setupIPC();
+    
+    this.createWindow({
       width: 800,
       height: 600,
-      frame: false,
       webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, 'preload.js'),
+        additionalArguments: [
+          `--handler-id=${this.instanceId}`,
+          `--channels=${JSON.stringify(channels)}`
+        ]
       }
     });
 
     await this.window.loadFile(path.join(__dirname, 'index.html'));
-
-    try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      this.window.webContents.send('text:load', {
-        path: filePath,
-        name: path.basename(filePath),
-        content: content,
-        type: path.extname(filePath).toLowerCase()
-      });
-    } catch (err) {
-      dialog.showErrorBox('错误', `无法读取文件: ${err.message}`);
-    }
-
-    this.window.on('closed', () => {
-      this.window = null;
-    });
+    await this.load();
   }
 
-  async close() {
-    if (this.window) {
-      this.window.close();
-      this.window = null;
+  async load() {
+    try {
+      const content = await fs.readFile(this.filePath, 'utf8');
+      if (this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:loaded', {
+          content,
+          path: this.filePath
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load file:', err);
+      if (this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:error', err.message);
+      }
+    }
+  }
+
+  async handleSave(event, content) {
+    try {
+      await fs.writeFile(this.filePath, content, 'utf8');
+      return true;
+    } catch (err) {
+      console.error('Failed to save file:', err);
+      return false;
+    }
+  }
+
+  async handleLoad() {
+    try {
+      const content = await fs.readFile(this.filePath, 'utf8');
+      return content;
+    } catch (err) {
+      console.error('Failed to load file:', err);
+      throw err;
     }
   }
 }

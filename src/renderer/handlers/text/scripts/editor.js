@@ -1,115 +1,156 @@
-let editor;
-let lineNumbers;
-let currentFile;
-let isDirty = false;
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
 
-document.addEventListener('DOMContentLoaded', () => {
-  editor = document.getElementById('editor');
-  lineNumbers = document.querySelector('.line-numbers');
+document.addEventListener('DOMContentLoaded', async () => {
+  const editor = document.getElementById('editor');
+  const lineNumbers = document.querySelector('.line-numbers');
+  const searchPanel = document.querySelector('.search-panel');
+  const searchInput = document.getElementById('search-input');
+  const cursorPosition = document.querySelector('.cursor-position');
+  const fileInfo = document.querySelector('.file-info');
+
+  // 初始化加载内容
+  try {
+    const content = await window.textAPI.getContent();
+    if (content) {
+      editor.value = content;
+      updateLineNumbers();
+    }
+  } catch (err) {
+    console.error('Failed to load initial content:', err);
+  }
 
   // 窗口控制
-  document.getElementById('minimize').onclick = () => window.textEditor.window.minimize();
-  document.getElementById('maximize').onclick = () => window.textEditor.window.maximize();
-  document.getElementById('close').onclick = () => window.textEditor.window.close();
-
-  // 文件操作
-  document.getElementById('save').onclick = saveFile;
-  document.getElementById('saveAs').onclick = saveFileAs;
-
-  // 编辑器设置
-  document.getElementById('fontSize').onchange = (e) => {
-    editor.style.fontSize = `${e.target.value}px`;
-  };
-
-  document.getElementById('theme').onchange = (e) => {
-    document.body.classList.toggle('light-theme', e.target.value === 'light');
-  };
-
-  // 编辑器事件
-  editor.addEventListener('input', () => {
-    updateLineNumbers();
-    isDirty = true;
+  document.getElementById('minimize').addEventListener('click', async () => {
+    try {
+      await window.textAPI.minimizeWindow();
+    } catch (err) {
+      console.error('Failed to minimize window:', err);
+    }
   });
-
-  editor.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = editor.selectionStart;
-      const end = editor.selectionEnd;
-      editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
-      editor.selectionStart = editor.selectionEnd = start + 2;
+  
+  document.getElementById('maximize').addEventListener('click', async () => {
+    try {
+      await window.textAPI.maximizeWindow();
+    } catch (err) {
+      console.error('Failed to maximize window:', err);
+    }
+  });
+  
+  document.getElementById('close').addEventListener('click', async () => {
+    try {
+      await window.textAPI.closeWindow();
+    } catch (err) {
+      console.error('Failed to close window:', err);
     }
   });
 
+  // 文件加载
+  window.textAPI.onFileLoaded(({ content, path }) => {
+    editor.value = content;
+    updateLineNumbers();
+    fileInfo.textContent = path;
+  });
+
+  window.textAPI.onFileError((error) => {
+    alert('加载文件失败：' + error);
+  });
+
+  // 保存文件
+  document.getElementById('save').addEventListener('click', async () => {
+    const success = await window.textAPI.saveContent(editor.value);
+    if (!success) {
+      alert('保存失败');
+    }
+  });
+
+  // 行号更新
+  function updateLineNumbers() {
+    const lines = editor.value.split('\n');
+    lineNumbers.innerHTML = lines
+      .map((_, i) => `<div>${i + 1}</div>`)
+      .join('');
+  }
+
+  editor.addEventListener('input', updateLineNumbers);
   editor.addEventListener('scroll', () => {
     lineNumbers.scrollTop = editor.scrollTop;
   });
 
   // 光标位置
-  editor.addEventListener('click', updateCursorPosition);
   editor.addEventListener('keyup', updateCursorPosition);
-});
+  editor.addEventListener('click', updateCursorPosition);
 
-// 加载文件
-window.textEditor.onTextLoad((textData) => {
-  currentFile = textData;
-  editor.value = textData.content;
-  document.querySelector('.title').textContent = textData.name;
-  document.querySelector('.file-type').textContent = getFileTypeName(textData.type);
-  updateLineNumbers();
-  isDirty = false;
-});
+  function updateCursorPosition() {
+    const pos = editor.selectionStart;
+    const lines = editor.value.substr(0, pos).split('\n');
+    const line = lines.length;
+    const col = lines[lines.length - 1].length + 1;
+    cursorPosition.textContent = `行: ${line}, 列: ${col}`;
+  }
 
-function updateLineNumbers() {
-  const lines = editor.value.split('\n').length;
-  lineNumbers.innerHTML = Array(lines)
-    .fill(0)
-    .map((_, i) => `<div>${i + 1}</div>`)
-    .join('');
-}
+  // 搜索功能
+  let searchResults = [];
+  let currentMatch = -1;
 
-function updateCursorPosition() {
-  const pos = getCursorPosition(editor);
-  document.querySelector('.cursor-position').textContent = 
-    `行 ${pos.line}, 列 ${pos.column}`;
-}
+  document.getElementById('search').addEventListener('click', () => {
+    searchPanel.classList.toggle('hidden');
+    if (!searchPanel.classList.contains('hidden')) {
+      searchInput.focus();
+    }
+  });
 
-function getCursorPosition(textarea) {
-  const lines = textarea.value.substr(0, textarea.selectionStart).split('\n');
-  return {
-    line: lines.length,
-    column: lines[lines.length - 1].length + 1
-  };
-}
+  document.getElementById('close-search').addEventListener('click', () => {
+    searchPanel.classList.add('hidden');
+  });
 
-async function saveFile() {
-  if (!isDirty) return;
-  await window.textEditor.file.save(editor.value);
-  isDirty = false;
-}
+  searchInput.addEventListener('input', () => {
+    const searchText = searchInput.value;
+    if (!searchText) {
+      searchResults = [];
+      currentMatch = -1;
+      return;
+    }
 
-async function saveFileAs() {
-  await window.textEditor.file.saveAs(editor.value);
-  isDirty = false;
-}
+    searchResults = [];
+    let match;
+    const regex = new RegExp(searchText, 'g');
+    while ((match = regex.exec(editor.value)) !== null) {
+      searchResults.push(match.index);
+    }
+    currentMatch = searchResults.length > 0 ? 0 : -1;
+    if (currentMatch >= 0) {
+      highlightMatch(searchResults[currentMatch]);
+    }
+  });
 
-function getFileTypeName(ext) {
-  const typeMap = {
-    '.txt': '文本文件',
-    '.md': 'Markdown',
-    '.json': 'JSON',
-    '.xml': 'XML',
-    '.yml': 'YAML',
-    '.yaml': 'YAML',
-    '.js': 'JavaScript',
-    '.ts': 'TypeScript',
-    '.py': 'Python',
-    '.java': 'Java',
-    '.c': 'C',
-    '.cpp': 'C++',
-    '.h': 'C/C++ Header',
-    '.css': 'CSS',
-    '.html': 'HTML'
-  };
-  return typeMap[ext] || '纯文本';
-} 
+  function highlightMatch(index) {
+    editor.focus();
+    editor.setSelectionRange(index, index + searchInput.value.length);
+  }
+
+  document.getElementById('next-match').addEventListener('click', () => {
+    if (searchResults.length === 0) return;
+    currentMatch = (currentMatch + 1) % searchResults.length;
+    highlightMatch(searchResults[currentMatch]);
+  });
+
+  document.getElementById('prev-match').addEventListener('click', () => {
+    if (searchResults.length === 0) return;
+    currentMatch = (currentMatch - 1 + searchResults.length) % searchResults.length;
+    highlightMatch(searchResults[currentMatch]);
+  });
+
+  // 字体大小调整
+  let fontSize = 14;
+  document.getElementById('font-increase').addEventListener('click', () => {
+    fontSize = Math.min(fontSize + 2, 24);
+    editor.style.fontSize = `${fontSize}px`;
+  });
+
+  document.getElementById('font-decrease').addEventListener('click', () => {
+    fontSize = Math.max(fontSize - 2, 8);
+    editor.style.fontSize = `${fontSize}px`;
+  });
+}); 

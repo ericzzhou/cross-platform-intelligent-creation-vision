@@ -1,64 +1,42 @@
-const fs = require('fs');
 const path = require('path');
-const { app } = require('electron');
+const fs = require('fs');
 
 class Logger {
   constructor() {
-    this.initialize();
+    this.logDir = path.join(process.cwd(), 'logs');
+    this.ensureLogDir();
   }
 
-  initialize() {
-    try {
-      const userData = app.getPath('userData');
-      this.logPath = path.join(userData, 'logs');
-      
-      if (!fs.existsSync(this.logPath)) {
-        fs.mkdirSync(this.logPath, { recursive: true });
-      }
-      
-      this.logFile = path.join(this.logPath, `app-${new Date().toISOString().split('T')[0]}.log`);
-      
-      this.writeLog('INFO', 'Logger initialized');
-    } catch (error) {
-      console.error('Logger initialization failed:', error);
+  ensureLogDir() {
+    if (!fs.existsSync(this.logDir)) {
+      fs.mkdirSync(this.logDir);
     }
   }
 
-  writeLog(level, message, ...args) {
+  log(level, message, ...args) {
     const timestamp = new Date().toISOString();
-    let logMessage = `[${timestamp}] [${level}] ${message}`;
+    const logMessage = `[${timestamp}] [${level}] ${message}`;
     
-    if (args.length > 0) {
-      logMessage += ' ' + args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : arg
-      ).join(' ');
-    }
-
-    console.log(logMessage);
+    console.log(logMessage, ...args);
     
-    try {
-      if (this.logFile) {
-        //fs.appendFileSync(this.logFile, logMessage + '\n');
-      }
-    } catch (error) {
-      console.error('Failed to write log:', error);
-    }
-  }
-
-  debug(message, ...args) {
-    this.writeLog('DEBUG', message, ...args);
+    const logFile = path.join(this.logDir, `${level}.log`);
+    fs.appendFileSync(logFile, logMessage + '\n');
   }
 
   info(message, ...args) {
-    this.writeLog('INFO', message, ...args);
-  }
-
-  warn(message, ...args) {
-    this.writeLog('WARN', message, ...args);
+    this.log('INFO', message, ...args);
   }
 
   error(message, ...args) {
-    this.writeLog('ERROR', message, ...args);
+    this.log('ERROR', message, ...args);
+  }
+
+  warn(message, ...args) {
+    this.log('WARN', message, ...args);
+  }
+
+  debug(message, ...args) {
+    this.log('DEBUG', message, ...args);
   }
 }
 

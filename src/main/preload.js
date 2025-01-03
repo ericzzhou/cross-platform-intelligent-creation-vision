@@ -1,13 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electron', {
-  window: {
-    minimize: () => ipcRenderer.invoke('window:minimize'),
-    maximize: () => ipcRenderer.invoke('window:maximize'),
-    close: () => ipcRenderer.invoke('window:close')
-  },
-  handlers: {
-    openFile: (filePath) => ipcRenderer.invoke('handler:openFile', filePath),
-    getHandlerInfo: (fileType) => ipcRenderer.invoke('handler:getInfo', fileType)
+contextBridge.exposeInMainWorld('electronAPI', {
+  // 窗口控制
+  minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
+  maximizeWindow: () => ipcRenderer.invoke('window:maximize'),
+  closeWindow: () => ipcRenderer.invoke('window:close'),
+  
+  // 文件处理
+  openFile: (filePath) => ipcRenderer.invoke('file:open', filePath),
+  
+  // 拖放处理
+  handleDrop: (callback) => {
+    ipcRenderer.on('file:dropped', callback);
   }
 }); 

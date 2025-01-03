@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Smart Vision Pro</title>
+  <meta charset="UTF-8">
+  <title>文件查看器</title>
+  <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <div id="app">
-        <h1>Smart Vision Pro</h1>
-        <button onclick="window.electron.openFile('test.jpg')">打开图片</button>
+  <div class="titlebar">
+    <div class="title">文件查看器</div>
+    <div class="window-controls">
+      <button id="minimize">─</button>
+      <button id="maximize">□</button>
+      <button id="close">×</button>
     </div>
+  </div>
+  
+  <div class="content">
+    <div id="drop-zone">
+      <div class="drop-message">
+        <h2>拖放文件到这里</h2>
+        <p>支持的文件类型：图片、视频、文本、PDF、Markdown等</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="scripts/main.js"></script>
 </body>
 </html> 

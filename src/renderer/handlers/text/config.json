@@ -1,12 +1,11 @@
 {
-  "type": "text",
-  "name": "文本编辑器",
+  "name": "文本查看器",
   "description": "支持查看和编辑文本文件",
-  "supportedExtensions": [
-    ".txt", ".log", ".md", ".json", ".xml", 
-    ".yml", ".yaml", ".ini", ".conf",
-    ".js", ".ts", ".py", ".java", ".c", ".cpp", ".h",
-    ".css", ".scss", ".less", ".html", ".htm"
-  ],
-  "icon": "text.svg"
+  "extensions": [".txt", ".log", ".ini", ".conf"],
+  "icon": "text.png",
+  "features": {
+    "edit": true,
+    "search": true,
+    "lineNumbers": true
+  }
 } 
