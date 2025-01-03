@@ -1,7 +1,14 @@
 {
-  "type": "image",
   "name": "图片查看器",
-  "description": "支持查看常见图片格式",
-  "supportedExtensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"],
-  "icon": "image.svg"
+  "description": "支持查看和编辑常见图片格式",
+  "extensions": [
+    ".jpg", ".jpeg", ".png", ".gif", ".bmp", 
+    ".webp", ".svg", ".ico", ".tiff"
+  ],
+  "icon": "image.png",
+  "features": {
+    "zoom": true,
+    "rotate": true,
+    "fullscreen": true
+  }
 } 

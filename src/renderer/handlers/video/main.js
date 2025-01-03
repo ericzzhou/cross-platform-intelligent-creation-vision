@@ -1,43 +1,62 @@
-const { BrowserWindow } = require('electron');
+const BaseHandler = require('../../../handlers/base');
 const path = require('path');
-const { BaseHandler } = require('../../../handlers/base');
+const fs = require('fs').promises;
 
 class VideoHandler extends BaseHandler {
-  constructor() {
-    super();
-    this.supportedTypes = ['.mp4', '.webm', '.mkv', '.avi', '.mov'];
-    this.window = null;
-  }
-
-  async open(filePath) {
-    this.window = new BrowserWindow({
-      width: 960,
+  async initialize() {
+    const channels = this.setupIPC();
+    
+    this.createWindow({
+      width: 800,
       height: 600,
-      frame: false,
       webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, 'preload.js'),
+        additionalArguments: [
+          `--handler-id=${this.instanceId}`,
+          `--channels=${JSON.stringify(channels)}`
+        ]
       }
     });
 
     await this.window.loadFile(path.join(__dirname, 'index.html'));
-
-    this.window.webContents.send('video:load', {
-      path: filePath,
-      name: path.basename(filePath)
-    });
-
-    this.window.on('closed', () => {
-      this.window = null;
-    });
+    await this.load();
   }
 
-  async close() {
-    if (this.window) {
-      this.window.close();
-      this.window = null;
+  async load() {
+    try {
+      if (this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:loaded', {
+          path: this.filePath,
+          name: path.basename(this.filePath)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load video:', err);
+      if (this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:error', err.message);
+      }
     }
+  }
+
+  // 添加视频特定的 IPC 处理方法
+  setupIPC() {
+    const channels = super.setupIPC();
+
+    // 处理全屏切换
+    ipcMain.handle(`video:fullscreen:${this.instanceId}`, () => {
+      if (this.window && !this.window.isDestroyed()) {
+        if (this.window.isFullScreen()) {
+          this.window.setFullScreen(false);
+        } else {
+          this.window.setFullScreen(true);
+        }
+      }
+    });
+
+    return {
+      ...channels,
+      fullscreen: `video:fullscreen:${this.instanceId}`
+    };
   }
 }
 

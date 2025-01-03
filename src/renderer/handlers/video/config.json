@@ -1,7 +1,15 @@
 {
-  "type": "video",
   "name": "视频播放器",
   "description": "支持播放常见视频格式",
-  "supportedExtensions": [".mp4", ".webm", ".mkv", ".avi", ".mov"],
-  "icon": "video.svg"
+  "extensions": [
+    ".mp4", ".webm", ".ogg", ".mov", 
+    ".avi", ".mkv", ".flv", ".wmv"
+  ],
+  "icon": "video.png",
+  "features": {
+    "playback": true,
+    "volume": true,
+    "progress": true,
+    "fullscreen": true
+  }
 } 

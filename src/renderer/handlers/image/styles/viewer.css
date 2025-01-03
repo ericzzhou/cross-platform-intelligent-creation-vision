@@ -1,60 +1,63 @@
-body {
+* {
   margin: 0;
   padding: 0;
-  background: #1e1e1e;
-  color: #fff;
-  user-select: none;
+  box-sizing: border-box;
 }
 
-.title-bar {
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  color: #fff;
+  overflow: hidden;
+}
+
+.titlebar {
+  height: 40px;
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 32px;
-  background: #2d2d2d;
+  padding: 0 16px;
   -webkit-app-region: drag;
+  z-index: 1000;
 }
 
 .window-controls {
   -webkit-app-region: no-drag;
+  display: flex;
+  gap: 8px;
 }
 
 .window-controls button {
-  width: 46px;
+  width: 32px;
   height: 32px;
   border: none;
   background: transparent;
   color: #fff;
   cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background-color 0.2s;
 }
 
 .window-controls button:hover {
   background: rgba(255,255,255,0.1);
 }
 
-.toolbar {
-  padding: 8px;
-  background: #2d2d2d;
-  text-align: center;
-}
-
-.toolbar button {
-  margin: 0 4px;
-  padding: 4px 12px;
-  border: none;
-  border-radius: 4px;
-  background: #3d3d3d;
-  color: #fff;
-  cursor: pointer;
-}
-
-.toolbar button:hover {
-  background: #4d4d4d;
+.window-controls button#close:hover {
+  background: #e74c3c;
 }
 
 .viewer-container {
+  flex: 1;
   position: relative;
-  height: calc(100vh - 80px);
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,8 +65,80 @@ body {
 }
 
 #image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  transition: transform 0.2s;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  visibility: hidden;
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.toolbar {
+  height: 48px;
+  background: rgba(0,0,0,0.8);
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 8px 8px 0 0;
+  backdrop-filter: blur(10px);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.toolbar:hover {
+  opacity: 1;
+}
+
+.toolbar button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 18px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.separator {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.2);
+  margin: 0 4px;
+}
+
+.loading, .error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 16px 32px;
+  background: rgba(0,0,0,0.8);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.hidden {
+  display: none;
 } 

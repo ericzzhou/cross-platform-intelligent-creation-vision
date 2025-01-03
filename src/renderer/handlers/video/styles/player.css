@@ -1,64 +1,133 @@
-body {
+* {
   margin: 0;
   padding: 0;
-  background: #1e1e1e;
-  color: #fff;
-  user-select: none;
+  box-sizing: border-box;
 }
 
-.title-bar {
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: #fff;
+  overflow: hidden;
+}
+
+.titlebar {
+  height: 40px;
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 32px;
-  background: #2d2d2d;
+  padding: 0 16px;
   -webkit-app-region: drag;
+  z-index: 1000;
 }
 
 .window-controls {
   -webkit-app-region: no-drag;
+  display: flex;
+  gap: 8px;
 }
 
 .window-controls button {
-  width: 46px;
+  width: 32px;
   height: 32px;
   border: none;
   background: transparent;
   color: #fff;
   cursor: pointer;
-}
-
-.player-container {
-  position: relative;
-  height: calc(100vh - 120px);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.window-controls button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.window-controls button#close:hover {
+  background: #e74c3c;
+}
+
+.player-container {
+  flex: 1;
+  position: relative;
   background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #video {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .controls {
-  height: 48px;
-  background: #2d2d2d;
-  padding: 8px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  padding: 16px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.player-container:hover .controls,
+.controls:hover {
+  opacity: 1;
 }
 
 .progress {
-  height: 4px;
-  background: #444;
-  cursor: pointer;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .progress-bar {
-  height: 100%;
-  background: #007acc;
-  width: 0;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  transition: height 0.2s;
+}
+
+.progress-bar:hover {
+  height: 6px;
+}
+
+.progress-current {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #3498db;
+  border-radius: 2px;
+}
+
+.progress-hover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+.time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
 }
 
 .buttons {
@@ -71,8 +140,19 @@ body {
   background: transparent;
   border: none;
   color: #fff;
+  font-size: 20px;
   cursor: pointer;
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.buttons button:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 .volume-control {
@@ -81,11 +161,61 @@ body {
   gap: 8px;
 }
 
-#volume {
-  width: 100px;
+.volume-control input[type="range"] {
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  transition: height 0.2s;
 }
 
-.time {
-  margin-left: auto;
-  font-size: 14px;
+.volume-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-control:hover input[type="range"] {
+  height: 6px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.loading, .error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 16px 32px;
+  background: rgba(0,0,0,0.8);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.hidden {
+  display: none;
+}
+
+/* 全屏样式 */
+:fullscreen .titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+:fullscreen .titlebar:hover {
+  opacity: 1;
 } 

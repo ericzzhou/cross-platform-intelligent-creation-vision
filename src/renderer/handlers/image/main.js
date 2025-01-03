@@ -1,47 +1,62 @@
-const { BrowserWindow } = require('electron');
+const BaseHandler = require('../../../handlers/base');
 const path = require('path');
-const { BaseHandler } = require('../../../handlers/base');
+const fs = require('fs').promises;
 
 class ImageHandler extends BaseHandler {
-  constructor() {
-    super();
-    this.supportedTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-    this.window = null;
-  }
-
-  async open(filePath) {
-    // 创建新窗口
-    this.window = new BrowserWindow({
+  async initialize() {
+    const channels = this.setupIPC();
+    
+    this.createWindow({
       width: 800,
       height: 600,
-      frame: false,
       webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, 'preload.js'),
+        additionalArguments: [
+          `--handler-id=${this.instanceId}`,
+          `--channels=${JSON.stringify(channels)}`
+        ]
       }
     });
 
-    // 加载图片查看器界面
     await this.window.loadFile(path.join(__dirname, 'index.html'));
-
-    // 发送文件路径到渲染进程
-    this.window.webContents.send('image:load', {
-      path: filePath,
-      name: path.basename(filePath)
-    });
-
-    // 处理窗口关闭
-    this.window.on('closed', () => {
-      this.window = null;
-    });
+    await this.load();
   }
 
-  async close() {
-    if (this.window) {
-      this.window.close();
-      this.window = null;
+  async load() {
+    try {
+      // 读取图片文件为 base64
+      const imageBuffer = await fs.readFile(this.filePath);
+      const base64Image = imageBuffer.toString('base64');
+      const mimeType = this.getMimeType(path.extname(this.filePath));
+      
+      if (this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:loaded', {
+          data: `data:${mimeType};base64,${base64Image}`,
+          path: this.filePath,
+          name: path.basename(this.filePath)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load image:', err);
+      if (this.window && !this.window.isDestroyed()) {
+        this.window.webContents.send('file:error', err.message);
+      }
     }
+  }
+
+  getMimeType(ext) {
+    const mimeTypes = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.bmp': 'image/bmp',
+      '.webp': 'image/webp',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.tiff': 'image/tiff'
+    };
+    return mimeTypes[ext.toLowerCase()] || 'application/octet-stream';
   }
 }
 

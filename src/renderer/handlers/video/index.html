@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>视频播放器</title>
-  <link rel="stylesheet" href="./styles/player.css">
+  <link rel="stylesheet" href="styles/player.css">
 </head>
 <body>
-  <div class="title-bar">
-    <div class="title"></div>
+  <div class="titlebar">
+    <div class="title">视频播放器</div>
     <div class="window-controls">
       <button id="minimize">─</button>
       <button id="maximize">□</button>
@@ -16,27 +16,35 @@
   </div>
 
   <div class="player-container">
-    <video id="video" controls>
-      您的浏览器不支持 video 标签
-    </video>
+    <video id="video"></video>
+    <div class="loading">加载中...</div>
+    <div class="error hidden">加载失败</div>
   </div>
 
   <div class="controls">
     <div class="progress">
-      <div class="progress-bar"></div>
-    </div>
-    <div class="buttons">
-      <button id="play-pause">播放</button>
-      <div class="volume-control">
-        <button id="mute">音量</button>
-        <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+      <div class="progress-bar">
+        <div class="progress-current"></div>
+        <div class="progress-hover"></div>
       </div>
       <div class="time">
-        <span id="current-time">00:00</span> / <span id="duration">00:00</span>
+        <span class="current-time">00:00</span>
+        <span class="duration">00:00</span>
       </div>
+    </div>
+
+    <div class="buttons">
+      <button id="play-pause" title="播放/暂停">▶</button>
+      <div class="volume-control">
+        <button id="mute" title="静音">🔊</button>
+        <input type="range" id="volume" min="0" max="100" value="100">
+      </div>
+      <div class="spacer"></div>
+      <button id="pip" title="画中画">⎵</button>
+      <button id="fullscreen" title="全屏">⤢</button>
     </div>
   </div>
 
-  <script src="./scripts/player.js"></script>
+  <script src="scripts/player.js"></script>
 </body>
 </html> 
