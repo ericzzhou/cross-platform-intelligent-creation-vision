@@ -81,17 +81,23 @@ body {
   height: 48px;
   background: rgba(0,0,0,0.8);
   position: fixed;
-  bottom: 0;
+  bottom: 16px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 100%);
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 16px;
-  border-radius: 8px 8px 0 0;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
-  opacity: 0.6;
-  transition: opacity 0.3s;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: auto;
+}
+
+.toolbar.visible {
+  transform: translate(-50%, 0);
+  opacity: 0.8;
 }
 
 .toolbar:hover {

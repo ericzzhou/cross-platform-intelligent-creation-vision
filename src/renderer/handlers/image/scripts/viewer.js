@@ -373,26 +373,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 工具栏自动隐藏
   const toolbar = document.querySelector('.toolbar');
-  let toolbarTimeout;
-
+  
   function showToolbar() {
-    toolbar.style.opacity = '1';
-    clearTimeout(toolbarTimeout);
-    toolbarTimeout = setTimeout(() => {
-      if (!toolbar.matches(':hover')) {
-        toolbar.style.opacity = '0.6';
-      }
-    }, 2000);
+    toolbar.classList.add('visible');
   }
-
-  container.addEventListener('mousemove', showToolbar);
+  
+  function hideToolbar() {
+    toolbar.classList.remove('visible');
+  }
+  
+  // 初始隐藏工具栏
+  hideToolbar();
+  
+  // 鼠标移动时显示工具栏
+  container.addEventListener('mousemove', () => {
+    showToolbar();
+    startHideTimer();
+  });
+  
+  // 鼠标离开容器时隐藏工具栏
+  container.addEventListener('mouseleave', hideToolbar);
+  
+  // 鼠标在工具栏上时保持显示
   toolbar.addEventListener('mouseenter', () => {
-    toolbar.style.opacity = '1';
-    clearTimeout(toolbarTimeout);
+    showToolbar();
+    clearHideTimer();
   });
-  toolbar.addEventListener('mouseleave', () => {
-    toolbar.style.opacity = '0.6';
+  
+  // 鼠标离开工具栏时启动隐藏计时器
+  toolbar.addEventListener('mouseleave', (e) => {
+    if (!container.contains(e.relatedTarget)) {
+      hideToolbar();
+    }
   });
+  
+  // 工具栏自动隐藏计时器
+  let hideTimer = null;
+  
+  function startHideTimer() {
+    clearHideTimer();
+    hideTimer = setTimeout(hideToolbar, 2000);
+  }
+  
+  function clearHideTimer() {
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+  }
 
   // 全屏模式
   let isFullscreen = false;
@@ -413,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('fullscreenchange', () => {
     isFullscreen = !!document.fullscreenElement;
     const fullscreenBtn = document.getElementById('fullscreen');
-    fullscreenBtn.textContent = isFullscreen ? '⤓' : '⤢';
+    fullscreenBtn.textContent = isFullscreen ? '⤓' : '⊞';
     fullscreenBtn.title = isFullscreen ? '退出全屏' : '全屏';
   });
 }); 
