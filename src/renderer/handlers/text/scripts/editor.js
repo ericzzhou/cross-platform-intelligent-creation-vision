@@ -8,11 +8,26 @@ class TextEditor {
     this.replaceInput = document.getElementById('replaceInput');
     this.fontSize = 14;
     this.modified = false;
+    this.titleElement = document.querySelector('.title');
 
     this.initEditor();
     this.initSearch();
     this.initFontControls();
     this.initFileHandling();
+    this.initWindowControls();
+    this.updateLineNumbers();
+    this.updateWordCount();
+    this.initFileInfo();
+    this.initDragDrop();
+
+    // 初始化状态显示
+    this.saveStatus.textContent = ''; // 初始状态不显示任何文本
+    document.querySelector('.file-path').textContent = ''; // 初始状态不显示任何文本
+
+    // 监听标题更新
+    window.textAPI.onTitleUpdate((title) => {
+      this.titleElement.textContent = title;
+    });
   }
 
   initEditor() {
@@ -20,11 +35,12 @@ class TextEditor {
     this.editor.addEventListener('input', () => {
       this.updateLineNumbers();
       this.updateCursorPosition();
+      this.updateWordCount();
       this.setModified(true);
     });
 
     this.editor.addEventListener('scroll', () => {
-      this.lineNumbers.scrollTop = this.editor.scrollTop;
+      this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
     });
 
     this.editor.addEventListener('keydown', (e) => {
@@ -128,6 +144,14 @@ class TextEditor {
       this.editor.value = content;
       this.updateLineNumbers();
       this.setModified(false);
+      
+      // 设置光标位置到开头并聚焦编辑器
+      this.editor.selectionStart = 0;
+      this.editor.selectionEnd = 0;
+      this.editor.blur();  // 先失焦
+      requestAnimationFrame(() => {  // 使用 requestAnimationFrame 确保在下一帧再聚焦
+        this.editor.focus();  // 重新聚焦，这样可以确保光标可见
+      });
     });
 
     window.textAPI.onError((error) => {
@@ -137,7 +161,14 @@ class TextEditor {
 
   updateLineNumbers() {
     const lines = this.editor.value.split('\n');
-    this.lineNumbers.innerHTML = lines.map((_, i) => `${i + 1}`).join('\n');
+    const lineCount = lines.length;
+    const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
+      .map(num => `<div class="line-number">${num}</div>`)
+      .join('');
+    this.lineNumbers.innerHTML = lineNumbers;
+
+    // 更新行号容器的高度以匹配编辑器
+    this.lineNumbers.style.height = `${this.editor.scrollHeight}px`;
   }
 
   updateCursorPosition() {
@@ -157,6 +188,16 @@ class TextEditor {
     if (this.modified !== modified) {
       this.modified = modified;
       document.body.classList.toggle('modified', modified);
+      
+      // 更新保存状态显示
+      if (modified) {
+        this.saveStatus.textContent = '未保存*';
+      } else {
+        this.saveStatus.textContent = '已保存';
+      }
+
+      // 通知主进程修改状态变化
+      window.textAPI.setModified(modified);
     }
   }
 
@@ -169,6 +210,128 @@ class TextEditor {
     } catch (error) {
       console.error('保存失败:', error);
     }
+  }
+
+  initShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        this.toggleSearchPanel();
+      }
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          this.saveFileAs();
+        } else {
+          this.saveFile();
+        }
+      }
+    });
+  }
+
+  toggleSearchPanel() {
+    const toolbar = document.querySelector('.toolbar');
+    toolbar.classList.toggle('show-search');
+    if (toolbar.classList.contains('show-search')) {
+      this.searchInput.focus();
+    }
+  }
+
+  updateWordCount() {
+    const text = this.editor.value;
+    // 使用更准确的中英文混合字数统计
+    const words = text.trim().split(/[\s\n]+/).filter(word => word.length > 0);
+    const wordCount = words.length;
+    const charCount = text.replace(/\n/g, '').length;
+    document.querySelector('.word-count').textContent = 
+      `字数: ${wordCount} 字符: ${charCount}`;
+  }
+
+  async saveFileAs() {
+    try {
+      await window.textAPI.saveFileAs(this.editor.value);
+      this.setModified(false);
+    } catch (error) {
+      console.error('另存为失败:', error);
+    }
+  }
+
+  initWindowControls() {
+    // 窗口控制按钮事件
+    document.querySelector('.minimize').addEventListener('click', () => {
+      window.textAPI.windowControl.minimize();
+    });
+
+    document.querySelector('.maximize').addEventListener('click', () => {
+      window.textAPI.windowControl.maximize();
+    });
+
+    document.querySelector('.close').addEventListener('click', () => {
+      window.textAPI.windowControl.close();
+    });
+
+    // ESC键关闭窗口
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.textAPI.windowControl.close();
+      }
+    });
+  }
+
+  initFileInfo() {
+    // 监听文件信息更新
+    window.textAPI.onFileChange((info) => {
+      this.updateFileInfo(info);
+    });
+  }
+
+  updateFileInfo(info) {
+    if (!info) {
+      // 清空所有状态显示
+      document.querySelector('.file-size').textContent = '';
+      document.querySelector('.file-time').textContent = '';
+      document.querySelector('.file-path').textContent = '';
+      document.querySelector('.file-path').removeAttribute('title');
+      return;
+    }
+
+    // 更新文件大小
+    const size = this.formatFileSize(info.size);
+    document.querySelector('.file-size').textContent = size;
+
+    // 更新修改时间
+    const time = new Date(info.mtime).toLocaleString();
+    document.querySelector('.file-time').textContent = time;
+
+    // 更新文件路径 - 显示文件名而不是完整路径
+    const fileName = info.path.split(/[/\\]/).pop();  // 提取文件名
+    document.querySelector('.file-path').textContent = fileName;
+    document.querySelector('.file-path').title = info.path; // 完整路径作为提示
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+  }
+
+  initDragDrop() {
+    document.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    document.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        await window.textAPI.openDroppedFile(file.path);
+      }
+    });
   }
 }
 

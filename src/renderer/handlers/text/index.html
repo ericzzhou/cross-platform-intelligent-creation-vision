@@ -4,29 +4,30 @@
   <meta charset="UTF-8">
   <title>文本查看器</title>
   <link rel="stylesheet" href="styles/editor.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css">
 </head>
 <body>
   <div class="title-bar">
-    <div class="title"></div>
+    <div class="title">未命名</div>
     <div class="window-controls">
-      <button class="minimize">─</button>
-      <button class="maximize">□</button>
-      <button class="close">×</button>
+      <button class="minimize" title="最小化"><i class="ri-subtract-line"></i></button>
+      <button class="maximize" title="最大化"><i class="ri-square-line"></i></button>
+      <button class="close" title="关闭"><i class="ri-close-line"></i></button>
     </div>
   </div>
 
   <div class="toolbar">
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="搜索...">
+      <input type="text" id="searchInput" placeholder="搜索... (Ctrl+F)">
       <input type="text" id="replaceInput" placeholder="替换...">
-      <button id="findPrev">↑</button>
-      <button id="findNext">↓</button>
-      <button id="replace">替换</button>
-      <button id="replaceAll">全部替换</button>
+      <button id="findPrev" title="查找上一个"><i class="ri-arrow-up-s-line"></i></button>
+      <button id="findNext" title="查找下一个"><i class="ri-arrow-down-s-line"></i></button>
+      <button id="replace" title="替换"><i class="ri-arrow-right-line"></i></button>
+      <button id="replaceAll" title="全部替换"><i class="ri-list-check-2"></i></button>
     </div>
     <div class="font-controls">
-      <button id="fontDecrease">A-</button>
-      <button id="fontIncrease">A+</button>
+      <button id="fontDecrease" title="减小字体"><i class="ri-text-spacing"></i></button>
+      <button id="fontIncrease" title="增大字体"><i class="ri-text"></i></button>
     </div>
   </div>
 
@@ -36,10 +37,18 @@
   </div>
 
   <div class="status-bar">
-    <span class="cursor-position">行: 1, 列: 1</span>
-    <span class="encoding">UTF-8</span>
-    <span class="file-type">TEXT</span>
-    <span class="save-status"></span>
+    <div class="status-left">
+      <span class="cursor-position">行: 1, 列: 1</span>
+      <span class="encoding">UTF-8</span>
+      <span class="file-type">TEXT</span>
+      <span class="word-count">字数: 0 字符: 0</span>
+    </div>
+    <div class="status-right">
+      <span class="file-size">0 B</span>
+      <span class="file-time"></span>
+      <span class="file-path"></span>
+      <span class="save-status"></span>
+    </div>
   </div>
 
   <script src="scripts/editor.js"></script>
