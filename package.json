@@ -5,12 +5,8 @@
   "main": "src/main/index.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"cross-env NODE_ENV=development electron .\"",
-    "start": "set NODE_ENV=development && electron .",
-    "build": "vite build && electron-builder --win --publish=always",
-    "postinstall": "electron-builder install-app-deps",
-    "pack": "vite build && electron-builder --dir",
-    "dist": "vite build && electron-builder",
-    "generate-icons": "node scripts/generate-icons.js"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "sharp": "^0.33.5"

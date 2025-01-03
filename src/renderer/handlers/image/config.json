@@ -1,0 +1,5 @@
+{
+  "name": "图片查看器",
+  "extensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp"],
+  "description": "支持查看常见图片格式"
+} 

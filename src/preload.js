@@ -57,3 +57,15 @@ contextBridge.exposeInMainWorld('api', {
       })
   }
 }); 
+
+contextBridge.exposeInMainWorld('electron', {
+  // 保留现有的API...
+  
+  openFile: (filePath) => {
+    ipcRenderer.send('open-file', filePath);
+  },
+  
+  onLoadImage: (callback) => {
+    ipcRenderer.on('load-image', callback);
+  }
+}); 
