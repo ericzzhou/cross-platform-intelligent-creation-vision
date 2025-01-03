@@ -143,6 +143,7 @@ class TextEditor {
     window.textAPI.onFileLoad((content) => {
       this.editor.value = content;
       this.updateLineNumbers();
+      this.updateWordCount();  // 更新字数统计
       this.setModified(false);
       
       // 设置光标位置到开头并聚焦编辑器
@@ -151,6 +152,13 @@ class TextEditor {
       this.editor.blur();  // 先失焦
       requestAnimationFrame(() => {  // 使用 requestAnimationFrame 确保在下一帧再聚焦
         this.editor.focus();  // 重新聚焦，这样可以确保光标可见
+      });
+
+      // 加载完成后获取并更新文件信息
+      window.textAPI.getFileInfo().then(info => {
+        if (info) {
+          this.updateFileInfo(info);
+        }
       });
     });
 
@@ -242,7 +250,7 @@ class TextEditor {
     // 使用更准确的中英文混合字数统计
     const words = text.trim().split(/[\s\n]+/).filter(word => word.length > 0);
     const wordCount = words.length;
-    const charCount = text.replace(/\n/g, '').length;
+    const charCount = text.length;  // 包含换行符的字符数
     document.querySelector('.word-count').textContent = 
       `字数: ${wordCount} 字符: ${charCount}`;
   }
@@ -307,6 +315,9 @@ class TextEditor {
     const fileName = info.path.split(/[/\\]/).pop();  // 提取文件名
     document.querySelector('.file-path').textContent = fileName;
     document.querySelector('.file-path').title = info.path; // 完整路径作为提示
+
+    // 更新编码显示
+    document.querySelector('.encoding').textContent = info.encoding.toUpperCase();
   }
 
   formatFileSize(bytes) {

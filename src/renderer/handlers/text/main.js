@@ -36,24 +36,40 @@ class TextHandler extends BaseHandler {
 
     // 添加窗口关闭前的保存检查
     this.window.on('close', async (e) => {
-      if (await this.window.webContents.executeJavaScript('window.isModified()')) {
+      if (this.modified) {  // 使用实例的 modified 状态而不是通过 JS 执行
         e.preventDefault();
         const choice = await dialog.showMessageBox(this.window, {
           type: 'question',
           buttons: ['保存', '不保存', '取消'],
           title: '保存文件',
-          message: '文件已修改，是否保存？'
+          message: '文件已修改，是否保存？',
+          defaultId: 0,
+          cancelId: 2
         });
         
-        if (choice.response === 0) {
-          // 保存
-          await this.handleSave();
-          this.window.destroy();
-        } else if (choice.response === 1) {
-          // 不保存
-          this.window.destroy();
+        try {
+          if (choice.response === 0) {
+            // 保存
+            if (!this.filePath) {
+              // 如果没有文件路径，先执行另存为
+              const saved = await this.saveFileAs();
+              if (!saved) return; // 用户取消了另存为操作
+            } else {
+              await this.handleSave();
+            }
+            this.window.destroy();
+          } else if (choice.response === 1) {
+            // 不保存
+            this.window.destroy();
+          }
+          // 取消则不做任何操作
+        } catch (error) {
+          await dialog.showMessageBox(this.window, {
+            type: 'error',
+            title: '保存失败',
+            message: '保存文件时发生错误：' + error.message
+          });
         }
-        // 取消则不做任何操作
       }
     });
 
@@ -140,8 +156,10 @@ class TextHandler extends BaseHandler {
 
     if (!result.canceled) {
       this.filePath = result.filePath;
-      return this.handleSave();
+      await this.handleSave();
+      return true;
     }
+    return false;
   }
 
   async load() {
@@ -159,15 +177,16 @@ class TextHandler extends BaseHandler {
       // 使用 iconv-lite 解码内容
       const content = iconv.decode(buffer, this.encoding);
       
+      // 获取文件信息
+      const fileInfo = await this.getFileInfo();
+
       if (this.window && !this.window.isDestroyed()) {
+        // 先发送文件信息，再发送内容
+        if (fileInfo) {
+          this.window.webContents.send('file:info', fileInfo);
+        }
         this.window.webContents.send('file:load', content);
         this.window.webContents.send('file:encoding', this.encoding);
-      }
-
-      // 发送文件信息
-      const fileInfo = await this.getFileInfo();
-      if (fileInfo) {
-        this.window.webContents.send('file:info', fileInfo);
       }
 
       // 更新窗口标题
@@ -187,7 +206,7 @@ class TextHandler extends BaseHandler {
       }
 
       // 使用 iconv-lite 编码内容
-      const buffer = iconv.encode(content, this.encoding);
+      const buffer = iconv.encode(content || await this.getCurrentContent(), this.encoding);
       await fs.writeFile(this.filePath, buffer);
       
       // 更新修改状态
@@ -290,6 +309,11 @@ class TextHandler extends BaseHandler {
       openDropped: this.getChannelName('openDropped'),
       modified: this.getChannelName('modified')
     };
+  }
+
+  // 添加获取当前内容的方法
+  async getCurrentContent() {
+    return await this.window.webContents.executeJavaScript('document.getElementById("editor").value');
   }
 }
 
