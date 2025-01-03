@@ -1,0 +1,82 @@
+{
+  "name": "smart-vision-pro",
+  "private": true,
+  "version": "0.0.1",
+  "main": "src/main/index.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"cross-env NODE_ENV=development electron .\"",
+    "start": "set NODE_ENV=development && electron .",
+    "build": "vite build && electron-builder --win --publish=always",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "vite build && electron-builder --dir",
+    "dist": "vite build && electron-builder",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "cross-env": "^7.x.x",
+    "electron": "30.0.1",
+    "electron-builder": "^25.0.5",
+    "png-to-ico": "^2.1.8",
+    "vite": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.zhouzk.smartvision.app",
+    "productName": "智创视界",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "src/main/**/*",
+      "src/preload.js",
+      "package.json",
+      "src/utils/**/*",
+      "build/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ericzzhou",
+        "repo": "cross-platform-intelligent-creation-vision",
+        "private": true
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "fileAssociations": [
+        {
+          "ext": [
+            "jpg",
+            "jpeg",
+            "png",
+            "gif",
+            "bmp",
+            "webp"
+          ],
+          "name": "Image",
+          "description": "Image File",
+          "role": "Viewer"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

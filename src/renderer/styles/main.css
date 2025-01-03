@@ -1,0 +1,111 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #1e1e1e;
+  color: #fff;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.drop-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #3c3c3c;
+  margin: 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.drop-zone.drag-over {
+  border-color: #4c8bf5;
+  background-color: rgba(76, 139, 245, 0.1);
+}
+
+.drop-message {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+}
+
+.supported-types {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.viewer-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background-color: #1e1e1e;
+  display: none;
+  z-index: 1000;
+}
+
+.status-bar {
+  font-size: 12px;
+  color: #666;
+}
+
+.status-bar .status-text,
+.status-bar .file-count {
+  opacity: 0.8;
+}
+
+.titlebar {
+  height: 32px;
+  background: #2c2c2c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  -webkit-app-region: drag;
+  padding: 0 12px;
+}
+
+.titlebar-drag {
+  color: #fff;
+  font-size: 14px;
+}
+
+.window-controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.window-controls button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.window-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.window-controls .close:hover {
+  background-color: #e81123;
+} 
