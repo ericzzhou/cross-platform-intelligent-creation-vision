@@ -1,0 +1,7 @@
+{
+  "type": "xml",
+  "name": "XML 编辑器",
+  "description": "支持 XML 文件的编辑、格式化和验证",
+  "supportedExtensions": [".xml", ".svg", ".xhtml", ".xsl", ".xsd"],
+  "icon": "xml.svg"
+} 

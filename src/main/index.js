@@ -2,63 +2,65 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const handlerManager = require('../handlers/handlerManager');
 
-let mainWindow;
-
-function createMainWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js')
-    }
-  });
-
-  // 在开发环境中加载 Vite dev server
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-  }
-}
-
-// 应用启动时
-app.whenReady().then(() => {
-  createMainWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
-    }
-  });
-});
-
-// 监听文件打开请求
-ipcMain.on('open-file', (event, filePath) => {
-  handleFileOpen(filePath);
-});
-
-// 处理文件打开
-async function handleFileOpen(filePath) {
-  const win = new BrowserWindow({
+async function createWindow() {
+  const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js')
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
-  try {
-    const handler = handlerManager.getHandler(filePath, win);
-    await handler.handle(filePath);
-  } catch (error) {
-    console.error('处理文件时出错:', error);
-  }
+  await mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 }
+
+app.whenReady().then(async () => {
+  // 加载所有处理器
+  await handlerManager.loadHandlers();
+  
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+// 处理文件打开
+ipcMain.handle('open-file', async (_, filePath) => {
+  const handler = handlerManager.getHandlerForFile(filePath);
+  if (handler) {
+    await handler.open(filePath);
+    return true;
+  }
+  return false;
+});
+
+// 处理窗口控制
+ipcMain.handle('window:minimize', (event) => {
+  BrowserWindow.fromWebContents(event.sender).minimize();
+});
+
+ipcMain.handle('window:maximize', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win.isMaximized() ? win.unmaximize() : win.maximize();
+});
+
+ipcMain.handle('window:close', (event) => {
+  BrowserWindow.fromWebContents(event.sender).close();
+});
+
+// 处理文件保存
+ipcMain.handle('xml:save', async (event, content) => {
+  // 实现保存逻辑
+});
+
+ipcMain.handle('xml:saveAs', async (event, content) => {
+  // 实现另存为逻辑
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

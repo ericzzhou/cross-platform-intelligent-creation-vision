@@ -1,16 +1,19 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs').promises;
 const { BaseHandler } = require('../../../handlers/base');
 
-class ImageHandler extends BaseHandler {
+class XmlHandler extends BaseHandler {
   constructor() {
     super();
-    this.supportedTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    this.supportedTypes = ['.xml', '.svg', '.xhtml', '.xsl', '.xsd'];
     this.window = null;
+    this.currentFile = null;
   }
 
   async open(filePath) {
-    // 创建新窗口
+    this.currentFile = filePath;
+
     this.window = new BrowserWindow({
       width: 800,
       height: 600,
@@ -22,16 +25,19 @@ class ImageHandler extends BaseHandler {
       }
     });
 
-    // 加载图片查看器界面
     await this.window.loadFile(path.join(__dirname, 'index.html'));
 
-    // 发送文件路径到渲染进程
-    this.window.webContents.send('image:load', {
-      path: filePath,
-      name: path.basename(filePath)
-    });
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
+      this.window.webContents.send('xml:load', {
+        path: filePath,
+        name: path.basename(filePath),
+        content: content
+      });
+    } catch (err) {
+      dialog.showErrorBox('错误', `无法读取文件: ${err.message}`);
+    }
 
-    // 处理窗口关闭
     this.window.on('closed', () => {
       this.window = null;
     });
@@ -45,4 +51,4 @@ class ImageHandler extends BaseHandler {
   }
 }
 
-module.exports = ImageHandler; 
+module.exports = XmlHandler; 

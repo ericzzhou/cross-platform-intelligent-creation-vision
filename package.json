@@ -1,78 +1,32 @@
 {
-  "name": "smart-vision-pro",
-  "private": true,
-  "version": "0.0.1",
+  "name": "electron-file-viewer",
+  "version": "1.0.0",
+  "description": "可扩展的文件查看器",
   "main": "src/main/index.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"cross-env NODE_ENV=development electron .\"",
+    "dev": "electron .",
     "build": "vite build",
-    "preview": "vite preview"
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "dependencies": {
-    "sharp": "^0.33.5"
+    "electron-updater": "^5.0.0"
   },
   "devDependencies": {
-    "concurrently": "^8.0.0",
-    "cross-env": "^7.x.x",
-    "electron": "30.0.1",
-    "electron-builder": "^25.0.5",
-    "png-to-ico": "^2.1.8",
-    "vite": "^5.0.0"
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0",
+    "vite": "^4.0.0",
+    "vite-plugin-electron": "^0.11.0"
   },
   "build": {
-    "appId": "com.zhouzk.smartvision.app",
-    "productName": "智创视界",
-    "asar": true,
+    "appId": "com.example.file-viewer",
+    "productName": "文件查看器",
     "directories": {
-      "output": "release"
+      "output": "dist"
     },
-    "files": [
-      "dist/**/*",
-      "src/main/**/*",
-      "src/preload.js",
-      "package.json",
-      "src/utils/**/*",
-      "build/**/*"
-    ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "ericzzhou",
-        "repo": "cross-platform-intelligent-creation-vision",
-        "private": true
-      }
-    ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico",
-      "fileAssociations": [
-        {
-          "ext": [
-            "jpg",
-            "jpeg",
-            "png",
-            "gif",
-            "bmp",
-            "webp"
-          ],
-          "name": "Image",
-          "description": "Image File",
-          "role": "Viewer"
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "target": ["nsis"]
     }
   }
 }

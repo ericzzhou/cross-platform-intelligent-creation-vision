@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>文本编辑器</title>
+  <link rel="stylesheet" href="./styles/editor.css">
+  <link rel="stylesheet" href="./styles/highlight.css">
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title"></div>
+    <div class="window-controls">
+      <button id="minimize">─</button>
+      <button id="maximize">□</button>
+      <button id="close">×</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="save">保存</button>
+    <button id="saveAs">另存为</button>
+    <div class="editor-settings">
+      <select id="fontSize">
+        <option value="12">12px</option>
+        <option value="14" selected>14px</option>
+        <option value="16">16px</option>
+        <option value="18">18px</option>
+      </select>
+      <select id="theme">
+        <option value="light">浅色</option>
+        <option value="dark" selected>深色</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="editor-container">
+    <div class="line-numbers"></div>
+    <textarea id="editor" spellcheck="false"></textarea>
+  </div>
+
+  <div class="status-bar">
+    <span class="file-type">纯文本</span>
+    <span class="cursor-position">行 1, 列 1</span>
+  </div>
+
+  <script src="./scripts/highlight.js"></script>
+  <script src="./scripts/editor.js"></script>
+</body>
+</html> 

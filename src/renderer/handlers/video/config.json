@@ -1,0 +1,7 @@
+{
+  "type": "video",
+  "name": "视频播放器",
+  "description": "支持播放常见视频格式",
+  "supportedExtensions": [".mp4", ".webm", ".mkv", ".avi", ".mov"],
+  "icon": "video.svg"
+} 

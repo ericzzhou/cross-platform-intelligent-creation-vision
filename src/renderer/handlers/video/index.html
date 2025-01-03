@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>视频播放器</title>
+  <link rel="stylesheet" href="./styles/player.css">
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title"></div>
+    <div class="window-controls">
+      <button id="minimize">─</button>
+      <button id="maximize">□</button>
+      <button id="close">×</button>
+    </div>
+  </div>
+
+  <div class="player-container">
+    <video id="video" controls>
+      您的浏览器不支持 video 标签
+    </video>
+  </div>
+
+  <div class="controls">
+    <div class="progress">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="buttons">
+      <button id="play-pause">播放</button>
+      <div class="volume-control">
+        <button id="mute">音量</button>
+        <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+      </div>
+      <div class="time">
+        <span id="current-time">00:00</span> / <span id="duration">00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="./scripts/player.js"></script>
+</body>
+</html> 

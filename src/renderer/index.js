@@ -383,3 +383,22 @@ class App {
 }
 
 new App(); 
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 处理文件拖放
+  document.body.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  document.body.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const filePath = files[0].path;
+      await window.api.openFile(filePath);
+    }
+  });
+}); 

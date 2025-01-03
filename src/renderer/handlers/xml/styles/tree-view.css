@@ -1,0 +1,108 @@
+.tree-view {
+  width: 300px;
+  background: #252526;
+  border-right: 1px solid #333;
+  overflow: auto;
+  font-size: 13px;
+  display: none;
+}
+
+.tree-view.visible {
+  display: block;
+}
+
+.tree-node {
+  padding: 2px 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tree-node:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.tree-node .icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  text-align: center;
+  color: #c5c5c5;
+}
+
+.tree-node .label {
+  color: #d4d4d4;
+}
+
+.tree-node .attributes {
+  color: #9cdcfe;
+  margin-left: 4px;
+}
+
+.tree-node .text {
+  color: #ce9178;
+  margin-left: 4px;
+}
+
+.tree-node.selected {
+  background: #094771;
+}
+
+.tree-node.selected .label {
+  color: #ffffff;
+}
+
+/* 缩进和展开/折叠控制 */
+.tree-node {
+  padding-left: 20px;
+}
+
+.tree-node .toggle {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tree-node .toggle:before {
+  content: '▶';
+  font-size: 10px;
+}
+
+.tree-node.expanded .toggle:before {
+  content: '▼';
+}
+
+/* 浅色主题 */
+body.light-theme .tree-view {
+  background: #f3f3f3;
+  border-right-color: #ddd;
+}
+
+body.light-theme .tree-node:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+body.light-theme .tree-node .icon {
+  color: #424242;
+}
+
+body.light-theme .tree-node .label {
+  color: #000000;
+}
+
+body.light-theme .tree-node .attributes {
+  color: #0451a5;
+}
+
+body.light-theme .tree-node .text {
+  color: #a31515;
+}
+
+body.light-theme .tree-node.selected {
+  background: #cce5ff;
+}
+
+body.light-theme .tree-node.selected .label {
+  color: #000000;
+} 

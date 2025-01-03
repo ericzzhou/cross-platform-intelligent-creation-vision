@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>XML 编辑器</title>
+  <link rel="stylesheet" href="./styles/editor.css">
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title"></div>
+    <div class="window-controls">
+      <button id="minimize">─</button>
+      <button id="maximize">□</button>
+      <button id="close">×</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="save">保存</button>
+    <button id="saveAs">另存为</button>
+    <button id="format">格式化</button>
+    <button id="minify">压缩</button>
+    <button id="validate">验证</button>
+    <button id="toggleTree">树形视图</button>
+    <div class="editor-settings">
+      <select id="fontFamily">
+        <option value="Consolas">Consolas</option>
+        <option value="Monaco">Monaco</option>
+        <option value="Source Code Pro">Source Code Pro</option>
+      </select>
+      <input type="number" id="fontSize" value="14" min="8" max="32" step="1">
+      <select id="lineHeight">
+        <option value="1.2">紧凑</option>
+        <option value="1.5" selected>正常</option>
+        <option value="2.0">宽松</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="editor-container">
+    <div class="line-numbers"></div>
+    <div class="editor-wrapper">
+      <textarea id="editor" spellcheck="false"></textarea>
+      <pre id="highlight"><code></code></pre>
+    </div>
+    <div class="tree-view"></div>
+  </div>
+
+  <div class="status-bar">
+    <span class="file-info">XML</span>
+    <span class="validation-status">有效的 XML</span>
+    <span class="cursor-position">行 1, 列 1</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/prettier@2.8.8/standalone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prettier@2.8.8/parser-xml.js"></script>
+  <script src="./scripts/xml-parser.js"></script>
+  <script src="./scripts/editor.js"></script>
+  <link rel="stylesheet" href="./styles/tree-view.css">
+  <script src="./scripts/tree-view.js"></script>
+</body>
+</html> 
