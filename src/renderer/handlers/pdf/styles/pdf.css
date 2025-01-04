@@ -127,26 +127,159 @@ body {
   border-radius: 4px;
 }
 
-/* 查看器容器 */
+/* 主内容区域 */
 .viewer-container {
   flex: 1;
   position: relative;
   background: #f0f0f0;
+  display: flex;
+}
+
+/* 缩略图侧边栏 */
+.thumbnails-sidebar {
+  width: 160px;
+  background: #fff;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.thumbnails-header {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  color: #666;
+  background: var(--toolbar-bg);
+}
+
+.thumbnails-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  /* 自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.thumbnails-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.thumbnails-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thumbnails-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.thumbnail {
+  margin-bottom: 8px;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.thumbnail.active {
+  border-color: var(--primary-color);
+}
+
+.thumbnail:hover {
+  border-color: var(--hover-color);
+}
+
+.thumbnail canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.thumbnail-label {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 10px;
+}
+
+/* 主内容区域 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 #viewerContainer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: auto;
+  flex: 1;
+  overflow-y: scroll;
+  overflow-x: hidden;
   padding: 20px;
+  /* 隐藏滚动条但保持功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  /* 防止滚动传播 */
+  overscroll-behavior: contain;
+}
+
+/* 隐藏 Webkit 浏览器的滚动条 */
+#viewerContainer::-webkit-scrollbar {
+  width: 0;
+  display: none;
 }
 
 #viewer {
   margin: 0 auto;
-  background: transparent;
+}
+
+/* 页面样式 */
+.page {
+  display: block;
+  margin: 0 auto 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page:last-child {
+  margin-bottom: 0;
+}
+
+/* 单页模式 */
+.single-mode .page {
+  margin: 0 auto;
+}
+
+/* 连续模式 */
+.continuous-mode .page {
+  margin: 0 auto 20px;
+}
+
+/* 状态栏 */
+.status-bar {
+  height: 24px;
+  min-height: 24px;
+  background: var(--toolbar-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.status-right {
+  display: flex;
+  gap: 16px;
 }
 
 /* 加载状态 */
@@ -202,36 +335,6 @@ body {
 .error i {
   font-size: 48px;
   color: #f44336;
-}
-
-/* 状态栏 */
-.status-bar {
-  height: 24px;
-  background: var(--toolbar-bg);
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 16px;
-  font-size: 12px;
-  color: #666;
-}
-
-.status-right {
-  display: flex;
-  gap: 16px;
-}
-
-/* PDF 页面样式 */
-.page {
-  display: block;
-  margin: 0 auto 20px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.page:last-child {
-  margin-bottom: 0;
 }
 
 /* 缩放控制 */
