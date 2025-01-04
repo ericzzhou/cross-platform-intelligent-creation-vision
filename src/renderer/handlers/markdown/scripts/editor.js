@@ -348,26 +348,31 @@ class MarkdownEditor {
     const lines = this.editor.value.split('\n');
     const lineCount = lines.length;
     
-    // 获取编辑器可见区域的高度和行高
-    const editorHeight = this.editor.clientHeight;
+    // 获取编辑器的行高
     const lineHeight = parseFloat(getComputedStyle(this.editor).lineHeight);
     
-    // 计算可见行数
-    const visibleLines = Math.ceil(editorHeight / lineHeight);
-    
-    // 获取当前滚动位置对应的起始行
-    const scrollTop = this.editor.scrollTop;
-    const startLine = Math.floor(scrollTop / lineHeight);
-    
-    // 生成行号 HTML
+    // 生成所有行的行号 HTML
     const lineNumbers = Array.from(
-      { length: Math.max(lineCount, visibleLines) },
-      (_, i) => `<div class="line-number" style="height: ${lineHeight}px">${i + 1}</div>`
+      { length: lineCount },
+      (_, i) => `<div class="line-number">${i + 1}</div>`
     ).join('');
     
     // 更新行号容器
     this.lineNumbers.innerHTML = lineNumbers;
-    this.lineNumbers.style.top = `-${scrollTop}px`;
+    
+    // 同步行号容器的滚动位置
+    this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
+    
+    // 设置行号容器的总高度，确保与编辑器内容高度一致
+    const totalHeight = lineCount * lineHeight;
+    this.lineNumbers.style.height = `${totalHeight}px`;
+    
+    // 更新行号样式以匹配编辑器的行高
+    const lineNumberElements = this.lineNumbers.getElementsByClassName('line-number');
+    Array.from(lineNumberElements).forEach(element => {
+      element.style.height = `${lineHeight}px`;
+      element.style.lineHeight = `${lineHeight}px`;
+    });
   }
 
   updateCursorPosition() {
