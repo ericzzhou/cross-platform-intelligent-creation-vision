@@ -1,7 +1,0 @@
-{
-  "type": "json",
-  "name": "JSON 编辑器",
-  "description": "支持 JSON 文件的编辑、格式化和验证",
-  "supportedExtensions": [".json"],
-  "icon": "json.svg"
-} 
