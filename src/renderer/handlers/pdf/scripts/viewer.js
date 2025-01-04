@@ -23,6 +23,7 @@ class PDFViewer {
     this.initFileHandling();
     this.initThumbnails();
     this.initScrollHandlers();
+    this.initKeyboardControls();
   }
 
   initWindowControls() {
@@ -538,6 +539,15 @@ class PDFViewer {
       }
       // 连续模式下自然滚动，不需要特殊处理
     }, { passive: false });
+  }
+
+  // 添加键盘控制初始化方法
+  initKeyboardControls() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.pdfAPI.windowControl.close();
+      }
+    });
   }
 }
 
