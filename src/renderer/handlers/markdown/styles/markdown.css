@@ -99,7 +99,7 @@ body {
   overflow: hidden;
   background: var(--bg-color);
   position: relative;
-  gap: 1px;
+  gap: 0;
 }
 
 /* 编辑器部分 */
@@ -109,6 +109,7 @@ body {
   position: relative;
   background: #fafafa;
   overflow: hidden;
+  min-width: 0;
 }
 
 /* 预览部分 */
@@ -117,13 +118,18 @@ body {
   overflow: auto;
   padding: 20px;
   background: #fff;
-  border-left: 1px solid var(--border-color);
+  border-left: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .preview-section .markdown-body {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* 预览模式下隐藏编辑器 */
@@ -145,9 +151,16 @@ body.edit-mode .editor-section {
 }
 
 /* 分屏模式下的布局 */
-body.split-mode .editor-section,
+body.split-mode .editor-section {
+  flex: 1 1 50%;
+}
+
 body.split-mode .preview-section {
-  flex: 1;
+  flex: 1 1 50%;
+}
+
+body.split-mode .splitter {
+  display: block;
 }
 
 /* 模式切换按钮样式 */
@@ -240,14 +253,21 @@ body.split-mode .preview-section {
   overflow: hidden;
   z-index: 1;
   pointer-events: none;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* 单个行号样式 */
 .line-number {
+  position: absolute;
+  left: 0;
+  width: 100%;
   padding: 0 8px;
   text-align: right;
   white-space: nowrap;
-  position: relative;
+  height: var(--line-height);
+  line-height: var(--line-height);
+  box-sizing: border-box;
 }
 
 /* 编辑器样式调整 */
@@ -267,8 +287,11 @@ body.split-mode .preview-section {
   tab-size: 4;
   position: relative;
   z-index: 0;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-y: scroll;
+  box-sizing: border-box;
 }
 
 /* Markdown 预览样式增强 */
@@ -278,12 +301,18 @@ body.split-mode .preview-section {
 }
 
 .markdown-body pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   background: #f6f8fa;
   border-radius: 4px;
   padding: 16px;
 }
 
 .markdown-body code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   font-family: 'Fira Code', monospace;
 }
 
@@ -416,4 +445,40 @@ body.split-mode .preview-section {
   font-size: 12px;
   min-width: 40px;
   text-align: center;
+}
+
+/* 分隔线样式 */
+.splitter {
+  width: 5px;
+  background: var(--border-color);
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  display: none;
+  flex: 0 0 5px;
+  position: relative;
+  z-index: 10;
+}
+
+.splitter:hover {
+  background: var(--primary-color);
+}
+
+/* 分屏模式下显示分隔线 */
+body.split-mode .splitter {
+  display: block;
+}
+
+/* 拖动时的样式 */
+body.dragging .splitter {
+  background: var(--primary-color);
+}
+
+body.dragging {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* 确保拖动时分隔线可见 */
+body.dragging .splitter {
+  display: block !important;
 } 

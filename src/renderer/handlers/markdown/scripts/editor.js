@@ -67,6 +67,9 @@ class MarkdownEditor {
         window.markdownAPI.windowControl.close();
       }
     });
+
+    // 初始化分隔线拖动
+    this.initSplitter();
   }
 
   initEditor() {
@@ -81,16 +84,19 @@ class MarkdownEditor {
 
     // 滚动同步
     this.editor.addEventListener('scroll', () => {
-      // 同步行号滚动
-      this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
-      
-      // 预览区域滚动同步
-      if (document.body.classList.contains('split-mode')) {
-        const percentage = this.editor.scrollTop / (this.editor.scrollHeight - this.editor.clientHeight);
-        const previewContainer = this.preview.parentElement;
-        const scrollTop = percentage * (previewContainer.scrollHeight - previewContainer.clientHeight);
-        previewContainer.scrollTop = scrollTop;
-      }
+      // 使用 requestAnimationFrame 优化滚动性能
+      requestAnimationFrame(() => {
+        // 同步行号滚动
+        this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
+        
+        // 预览区域滚动同步
+        if (document.body.classList.contains('split-mode')) {
+          const percentage = this.editor.scrollTop / (this.editor.scrollHeight - this.editor.clientHeight);
+          const previewContainer = this.preview.parentElement;
+          const scrollTop = percentage * (previewContainer.scrollHeight - previewContainer.clientHeight);
+          previewContainer.scrollTop = scrollTop;
+        }
+      });
     });
 
     // Tab 键支持
@@ -115,20 +121,31 @@ class MarkdownEditor {
     const editMode = document.getElementById('editMode');
     const previewMode = document.getElementById('previewMode');
     const splitMode = document.getElementById('splitMode');
+    const editorSection = document.querySelector('.editor-section');
+    const previewSection = document.querySelector('.preview-section');
 
-    editMode.addEventListener('click', () => {
+    editMode?.addEventListener('click', () => {
       document.body.className = 'edit-mode';
       this.updateActiveMode(editMode);
+      // 重置flex样式
+      editorSection.style.flex = '';
+      previewSection.style.flex = '';
     });
 
-    previewMode.addEventListener('click', () => {
+    previewMode?.addEventListener('click', () => {
       document.body.className = 'preview-mode';
       this.updateActiveMode(previewMode);
+      // 重置flex样式
+      editorSection.style.flex = '';
+      previewSection.style.flex = '';
     });
 
-    splitMode.addEventListener('click', () => {
+    splitMode?.addEventListener('click', () => {
       document.body.className = 'split-mode';
       this.updateActiveMode(splitMode);
+      // 重置为均分
+      editorSection.style.flex = '1';
+      previewSection.style.flex = '1';
     });
   }
 
@@ -344,34 +361,57 @@ class MarkdownEditor {
   }
 
   updateLineNumbers() {
-    // 获取编辑器内容的行数
+    // 获取编辑器内容的实际行数（只计算换行符）
     const lines = this.editor.value.split('\n');
     const lineCount = lines.length;
     
-    // 获取编辑器的行高
+    // 获取编辑器的行高并设置为 CSS 变量
     const lineHeight = parseFloat(getComputedStyle(this.editor).lineHeight);
+    document.documentElement.style.setProperty('--line-height', `${lineHeight}px`);
     
-    // 生成所有行的行号 HTML
-    const lineNumbers = Array.from(
-      { length: lineCount },
-      (_, i) => `<div class="line-number">${i + 1}</div>`
-    ).join('');
+    // 计算每行的实际高度（考虑自动换行）
+    const lineHeights = lines.map(line => {
+      // 创建临时元素来测量实际高度
+      const temp = document.createElement('div');
+      temp.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        width: ${this.editor.clientWidth - 60}px; /* 减去padding和行号宽度 */
+        font-family: ${getComputedStyle(this.editor).fontFamily};
+        font-size: ${getComputedStyle(this.editor).fontSize};
+        line-height: ${lineHeight}px;
+        padding: 0;
+        margin: 0;
+      `;
+      temp.textContent = line || ' '; // 空行也要保持一行高度
+      document.body.appendChild(temp);
+      const height = temp.offsetHeight;
+      document.body.removeChild(temp);
+      return height;
+    });
+    
+    // 生成行号 HTML，并计算每个行号的位置
+    let currentTop = 20; // 初始padding-top
+    const lineNumbersHTML = lines.map((_, i) => {
+      const lineNumber = i + 1;
+      const lineNumberHTML = `<div class="line-number" style="top: ${currentTop}px">${lineNumber}</div>`;
+      currentTop += lineHeights[i];
+      return lineNumberHTML;
+    }).join('');
     
     // 更新行号容器
-    this.lineNumbers.innerHTML = lineNumbers;
+    this.lineNumbers.innerHTML = lineNumbersHTML;
     
-    // 同步行号容器的滚动位置
-    this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
-    
-    // 设置行号容器的总高度，确保与编辑器内容高度一致
-    const totalHeight = lineCount * lineHeight;
+    // 设置行号容器的总高度
+    const totalHeight = currentTop + 20; // 加上padding-bottom
     this.lineNumbers.style.height = `${totalHeight}px`;
     
-    // 更新行号样式以匹配编辑器的行高
-    const lineNumberElements = this.lineNumbers.getElementsByClassName('line-number');
-    Array.from(lineNumberElements).forEach(element => {
-      element.style.height = `${lineHeight}px`;
-      element.style.lineHeight = `${lineHeight}px`;
+    // 同步滚动位置
+    requestAnimationFrame(() => {
+      this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
     });
   }
 
@@ -465,6 +505,63 @@ class MarkdownEditor {
     this.lineNumbers.style.fontSize = `${this.fontSize}px`;
     // 更新行号高度以匹配新的字体大小
     this.updateLineNumbers();
+  }
+
+  initSplitter() {
+    const container = document.querySelector('.editor-container');
+    const editorSection = document.querySelector('.editor-section');
+    const previewSection = document.querySelector('.preview-section');
+    const splitter = document.querySelector('.splitter');
+    
+    let isDragging = false;
+    let startX;
+    let startWidth;
+    
+    splitter?.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.pageX;
+      startWidth = editorSection.getBoundingClientRect().width;
+      
+      // 添加拖动状态样式
+      document.body.classList.add('dragging');
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      // 计算拖动距离
+      const delta = e.pageX - startX;
+      
+      // 计算新的宽度百分比
+      const containerWidth = container.getBoundingClientRect().width;
+      const newWidth = ((startWidth + delta) / containerWidth) * 100;
+      
+      // 限制最小和最大宽度
+      if (newWidth >= 20 && newWidth <= 80) {
+        editorSection.style.flex = `0 0 ${newWidth}%`;
+        previewSection.style.flex = `0 0 ${100 - newWidth}%`;
+      }
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        document.body.classList.remove('dragging');
+        
+        // 确保在分屏模式下分隔线保持显示
+        if (document.body.classList.contains('split-mode')) {
+          splitter.style.display = 'block';
+        }
+      }
+    });
+    
+    // 双击分隔线重置为均分
+    splitter?.addEventListener('dblclick', () => {
+      if (document.body.classList.contains('split-mode')) {
+        editorSection.style.flex = '1 1 50%';
+        previewSection.style.flex = '1 1 50%';
+      }
+    });
   }
 }
 
