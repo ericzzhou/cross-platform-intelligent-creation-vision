@@ -13,8 +13,8 @@ class PDFViewer {
     this.thumbnailScale = 0.15; // 减小缩略图缩放比例
     this.outline = null;
     
-    // 初始化 PDF.js
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    // 修改 PDF.js worker 路径
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdf.worker.min.js';
 
     // 初始化时设置默认缩放级别
     document.getElementById('zoomLevel').value = '1';

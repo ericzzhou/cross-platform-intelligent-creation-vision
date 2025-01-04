@@ -10,24 +10,32 @@
     "postinstall": "electron-builder install-app-deps",
     "generate-icons": "node scripts/generate-icons.js",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "prebuild": "rimraf dist"
   },
   "dependencies": {
     "chardet": "^2.0.0",
     "electron-updater": "^5.0.0",
     "highlight.js": "^11.11.1",
     "iconv-lite": "^0.6.3",
-    "markdown-it": "^14.1.0",
-    "pdfjs-dist": "3.11.174"
+    "markdown-it": "^14.1.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "cross-env": "^7.x.x",
     "electron": "30.0.1",
     "electron-builder": "^25.0.5",
+    "fs-extra": "^11.1.1",
     "png-to-ico": "^2.1.8",
+    "rimraf": "^5.0.1",
     "vite": "^5.0.0",
     "vite-plugin-electron": "^0.11.0"
+  },
+  "overrides": {
+    "canvas": "latest"
+  },
+  "resolutions": {
+    "canvas": "latest"
   },
   "build": {
     "appId": "com.zhouzk.smartvision.app",
@@ -37,10 +45,9 @@
       "output": "release"
     },
     "files": [
+      "dist/**/*",
       "src/**/*",
-      "package.json",
-      "build/**/*",
-      "scripts/**/*"
+      "package.json"
     ],
     "publish": [
       {
@@ -75,7 +82,9 @@
           "role": "Viewer"
         },
         {
-          "ext": ["pdf"],
+          "ext": [
+            "pdf"
+          ],
           "name": "PDF Document",
           "description": "PDF Document",
           "role": "Viewer"
