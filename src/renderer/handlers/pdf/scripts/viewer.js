@@ -235,6 +235,17 @@ class PDFViewer {
           this.viewer.appendChild(canvas);
           document.getElementById('pageNumber').value = num;
         }
+
+        // 更新并滚动缩略图
+        this.updateThumbnailHighlight();
+        const activeThumbnail = this.thumbnails.get(num);
+        if (activeThumbnail) {
+          const container = document.getElementById('thumbnailsContainer');
+          this.scrollIntoViewIfNeeded(activeThumbnail, container);
+        }
+
+        // 更新并滚动目录
+        this.updateOutlineHighlight(num);
       }
 
       this.pageRendering = false;
@@ -242,9 +253,6 @@ class PDFViewer {
         await this.renderPage(this.pageNumPending);
         this.pageNumPending = null;
       }
-
-      // 更新缩略图高亮
-      this.updateThumbnailHighlight();
     } catch (error) {
       console.error('Error rendering page:', error);
       this.showError(error.message);
@@ -607,6 +615,21 @@ class PDFViewer {
       div.textContent = item.title;
 
       if (item.dest) {
+        try {
+          let destination = item.dest;
+          if (typeof destination === 'string') {
+            destination = await this.pdfDoc.getDestination(destination);
+          }
+          
+          if (Array.isArray(destination) && destination.length > 0) {
+            const pageRef = destination[0];
+            const pageNumber = await this.pdfDoc.getPageIndex(pageRef) + 1;
+            div.dataset.page = pageNumber;
+          }
+        } catch (error) {
+          console.error('Error setting page data:', error);
+        }
+
         div.addEventListener('click', async () => {
           try {
             let destination = item.dest;
@@ -634,6 +657,72 @@ class PDFViewer {
         container.appendChild(subContainer);
         await this.renderOutline(item.items, subContainer, level + 1);
       }
+    }
+  }
+
+  // 添加滚动到可见区域的辅助方法
+  scrollIntoViewIfNeeded(element, container) {
+    const elementRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    
+    // 检查元素是否在容器可见区域内
+    if (elementRect.top < containerRect.top) {
+      // 如果元素在容器上方，滚动到元素顶部
+      container.scrollTop += elementRect.top - containerRect.top - 8;
+    } else if (elementRect.bottom > containerRect.bottom) {
+      // 如果元素在容器下方，滚动到元素底部
+      container.scrollTop += elementRect.bottom - containerRect.bottom + 8;
+    }
+  }
+
+  // 添加目录高亮更新方法
+  updateOutlineHighlight(pageNum) {
+    if (!this.outline) return;
+
+    const outlineContainer = document.getElementById('outlineContainer');
+    const currentActive = outlineContainer.querySelector('.outline-item.active');
+    if (currentActive) {
+      currentActive.classList.remove('active');
+    }
+
+    // 查找当前页面对应的目录项
+    const findOutlineItemForPage = async (items) => {
+      for (const item of items) {
+        if (item.dest) {
+          try {
+            let destination = item.dest;
+            if (typeof destination === 'string') {
+              destination = await this.pdfDoc.getDestination(destination);
+            }
+            
+            if (Array.isArray(destination) && destination.length > 0) {
+              const pageRef = destination[0];
+              const itemPageNum = await this.pdfDoc.getPageIndex(pageRef) + 1;
+              
+              if (itemPageNum === pageNum) {
+                const element = outlineContainer.querySelector(`[data-page="${itemPageNum}"]`);
+                if (element) {
+                  element.classList.add('active');
+                  this.scrollIntoViewIfNeeded(element, outlineContainer);
+                  return true;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error checking outline item:', error);
+          }
+        }
+
+        if (item.items && item.items.length > 0) {
+          const found = await findOutlineItemForPage(item.items);
+          if (found) return true;
+        }
+      }
+      return false;
+    };
+
+    if (this.outline) {
+      findOutlineItemForPage(this.outline);
     }
   }
 }
