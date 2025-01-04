@@ -27,6 +27,7 @@ class MarkdownEditor {
     this.initEditor();
     this.initModeControls();
     this.initSearch();
+    this.initFontControls();
     this.initWindowControls();
     this.updateLineNumbers();
     this.updateWordCount();
@@ -80,10 +81,15 @@ class MarkdownEditor {
 
     // 滚动同步
     this.editor.addEventListener('scroll', () => {
+      // 同步行号滚动
       this.lineNumbers.style.top = `-${this.editor.scrollTop}px`;
+      
+      // 预览区域滚动同步
       if (document.body.classList.contains('split-mode')) {
         const percentage = this.editor.scrollTop / (this.editor.scrollHeight - this.editor.clientHeight);
-        this.preview.parentElement.scrollTop = percentage * (this.preview.parentElement.scrollHeight - this.preview.parentElement.clientHeight);
+        const previewContainer = this.preview.parentElement;
+        const scrollTop = percentage * (previewContainer.scrollHeight - previewContainer.clientHeight);
+        previewContainer.scrollTop = scrollTop;
       }
     });
 
@@ -97,6 +103,11 @@ class MarkdownEditor {
         this.editor.selectionStart = this.editor.selectionEnd = start + 4;
         this.updatePreview();
       }
+    });
+
+    // 添加窗口大小变化监听
+    window.addEventListener('resize', () => {
+      this.updateLineNumbers();
     });
   }
 
@@ -159,13 +170,71 @@ class MarkdownEditor {
       }
     };
 
-    // 搜索和替换功能实现
-    document.getElementById('findNext')?.addEventListener('click', () => {
+    const scrollToMatch = (index) => {
+      if (index >= 0 && index < matches.length) {
+        const matchPosition = matches[index];
+        const matchLength = this.searchInput.value.length;
+        
+        // 设置选中
+        this.editor.setSelectionRange(matchPosition, matchPosition + matchLength);
+        
+        // 计算滚动位置
+        const lineHeight = parseFloat(getComputedStyle(this.editor).lineHeight);
+        const textBeforeMatch = this.editor.value.substring(0, matchPosition);
+        const linesBeforeMatch = textBeforeMatch.split('\n').length - 1;
+        const scrollPosition = linesBeforeMatch * lineHeight;
+        
+        // 确保选中内容在视图中间
+        const editorHeight = this.editor.clientHeight;
+        this.editor.scrollTop = scrollPosition - (editorHeight / 2);
+        
+        // 聚焦编辑器
+        this.editor.focus();
+      }
+    };
+
+    const updateSearchStatus = () => {
+      const searchStatus = document.querySelector('.search-status');
+      if (!searchStatus) return;
+      
+      if (matches.length > 0) {
+        searchStatus.textContent = `${currentMatch + 1}/${matches.length}`;
+        searchStatus.style.display = 'inline';
+      } else {
+        searchStatus.textContent = '无匹配';
+        searchStatus.style.display = this.searchInput.value ? 'inline' : 'none';
+      }
+    };
+
+    // 在搜索输入框变化时更新
+    this.searchInput.addEventListener('input', () => {
+      findMatches();
+      currentMatch = matches.length > 0 ? 0 : -1;
+      updateSearchStatus();
+      if (currentMatch >= 0) {
+        scrollToMatch(currentMatch);
+      }
+    });
+
+    // 在查找操作后更新状态
+    const findNext = document.getElementById('findNext');
+    const findPrev = document.getElementById('findPrev');
+    
+    findNext?.addEventListener('click', () => {
       findMatches();
       if (matches.length > 0) {
         currentMatch = (currentMatch + 1) % matches.length;
-        this.editor.setSelectionRange(matches[currentMatch], matches[currentMatch] + this.searchInput.value.length);
-        this.editor.focus();
+        scrollToMatch(currentMatch);
+        updateSearchStatus();
+      }
+    });
+
+    findPrev?.addEventListener('click', () => {
+      findMatches();
+      if (matches.length > 0) {
+        currentMatch = currentMatch <= 0 ? matches.length - 1 : currentMatch - 1;
+        scrollToMatch(currentMatch);
+        updateSearchStatus();
       }
     });
 
@@ -275,12 +344,30 @@ class MarkdownEditor {
   }
 
   updateLineNumbers() {
+    // 获取编辑器内容的行数
     const lines = this.editor.value.split('\n');
     const lineCount = lines.length;
-    const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
-      .map(num => `<div class="line-number">${num}</div>`)
-      .join('');
+    
+    // 获取编辑器可见区域的高度和行高
+    const editorHeight = this.editor.clientHeight;
+    const lineHeight = parseFloat(getComputedStyle(this.editor).lineHeight);
+    
+    // 计算可见行数
+    const visibleLines = Math.ceil(editorHeight / lineHeight);
+    
+    // 获取当前滚动位置对应的起始行
+    const scrollTop = this.editor.scrollTop;
+    const startLine = Math.floor(scrollTop / lineHeight);
+    
+    // 生成行号 HTML
+    const lineNumbers = Array.from(
+      { length: Math.max(lineCount, visibleLines) },
+      (_, i) => `<div class="line-number" style="height: ${lineHeight}px">${i + 1}</div>`
+    ).join('');
+    
+    // 更新行号容器
     this.lineNumbers.innerHTML = lineNumbers;
+    this.lineNumbers.style.top = `-${scrollTop}px`;
   }
 
   updateCursorPosition() {
@@ -347,6 +434,32 @@ class MarkdownEditor {
         maximizeBtn?.classList.remove('maximized');
       }
     });
+  }
+
+  initFontControls() {
+    const fontDecrease = document.getElementById('fontDecrease');
+    const fontIncrease = document.getElementById('fontIncrease');
+    
+    fontDecrease?.addEventListener('click', () => {
+      if (this.fontSize > 12) { // 最小字号限制
+        this.fontSize -= 2;
+        this.updateFontSize();
+      }
+    });
+    
+    fontIncrease?.addEventListener('click', () => {
+      if (this.fontSize < 24) { // 最大字号限制
+        this.fontSize += 2;
+        this.updateFontSize();
+      }
+    });
+  }
+
+  updateFontSize() {
+    this.editor.style.fontSize = `${this.fontSize}px`;
+    this.lineNumbers.style.fontSize = `${this.fontSize}px`;
+    // 更新行号高度以匹配新的字体大小
+    this.updateLineNumbers();
   }
 }
 
