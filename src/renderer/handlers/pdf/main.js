@@ -7,27 +7,38 @@ class PDFHandler extends BaseHandler {
   constructor(filePath) {
     super(filePath);
     this.ipc = ipcMain;
+    this.filePath = filePath;
+    this.encoding = 'utf8';
+  }
+
+  getChannelName(action) {
+    return `pdf:${action}:${this.instanceId}`;
   }
 
   async initialize() {
     const channels = this.setupIPC();
     
-    this.createWindow({
-      width: 1024,
-      height: 768,
-      minWidth: 800,
-      minHeight: 600,
-      frame: false,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js'),
-        additionalArguments: [
-          `--handler-id=${this.instanceId}`,
-          `--channels=${JSON.stringify(channels)}`
-        ]
-      }
+    this.window = new BrowserWindow({
+        width: 1024,
+        height: 768,
+        minWidth: 800,
+        minHeight: 600,
+        frame: false,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js'),
+            additionalArguments: [
+            `--handler-id=${this.instanceId}`,
+            `--channels=${JSON.stringify(channels)}`
+            ]
+        }
     });
+
+    // 只在 PDF 处理器窗口打开开发者工具
+    // if (process.env.NODE_ENV === 'development') {
+    //   this.window.webContents.openDevTools();
+    // }
 
     // 监听窗口状态变化
     this.window.on('maximize', () => {
@@ -45,13 +56,11 @@ class PDFHandler extends BaseHandler {
     await this.window.loadFile(path.join(__dirname, 'index.html'));
 
     if (this.filePath) {
-      await this.handleLoad();
+      await this.load();
     }
-
-    return channels;
   }
 
-  async handleLoad() {
+  async load() {
     try {
       if (!this.filePath) return;
       
