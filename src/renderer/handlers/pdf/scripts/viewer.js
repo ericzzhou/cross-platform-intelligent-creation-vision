@@ -227,6 +227,7 @@ class PDFViewer {
         if (this.viewMode === 'single') {
           this.viewer.innerHTML = '';
           this.viewer.appendChild(canvas);
+          document.getElementById('pageNumber').value = num;
         }
       }
 
@@ -280,7 +281,24 @@ class PDFViewer {
     this.scale *= factor;
     this.scale = Math.max(0.25, Math.min(4, this.scale));
     this.renderPage(this.pageNum);
-    this.updateZoomLevel();
+    
+    // 更新缩放显示
+    const zoomLevel = document.getElementById('zoomLevel');
+    const percentage = Math.round(this.scale * 100);
+    
+    // 移除之前的自定义选项
+    const oldCustomOption = zoomLevel.querySelector('.custom-zoom');
+    if (oldCustomOption) {
+      oldCustomOption.remove();
+    }
+
+    // 添加新的自定义选项
+    const customOption = document.createElement('option');
+    customOption.className = 'custom-zoom';
+    customOption.value = this.scale;
+    customOption.textContent = `${percentage}%`;
+    zoomLevel.appendChild(customOption);
+    zoomLevel.value = this.scale;
   }
 
   async onZoomLevelChange(e) {
@@ -383,6 +401,7 @@ class PDFViewer {
 
     prevButton.disabled = this.pageNum <= 1;
     nextButton.disabled = this.pageNum >= this.pdfDoc.numPages;
+    pageNumber.value = this.pageNum;
     pageNumber.max = this.pdfDoc.numPages;
   }
 
