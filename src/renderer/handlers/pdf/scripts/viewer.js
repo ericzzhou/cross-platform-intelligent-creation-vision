@@ -197,38 +197,42 @@ class PDFViewer {
     }
   }
 
-  async renderPage(num) {
-    if (this.pageRendering) {
+  async renderPage(num, isPreload = false) {
+    if (this.pageRendering && !isPreload) {
       this.pageNumPending = num;
       return;
     }
 
-    this.pageRendering = true;
-    document.getElementById('pageNumber').value = num;
+    this.pageRendering = !isPreload;
+    const page = await this.pdfDoc.getPage(num);
+    const viewport = page.getViewport({ 
+      scale: this.scale,
+      rotation: this.rotation 
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'page';
+    canvas.dataset.pageNumber = num;
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
     try {
-      const page = await this.pdfDoc.getPage(num);
-      const viewport = page.getViewport({ scale: this.scale, rotation: this.rotation });
-
-      const canvas = document.createElement('canvas');
-      canvas.className = 'page';
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      const renderContext = {
+      await page.render({
         canvasContext: context,
         viewport: viewport
-      };
+      }).promise;
 
-      await page.render(renderContext).promise;
-
-      this.viewer.innerHTML = '';
-      this.viewer.appendChild(canvas);
+      if (!isPreload) {
+        if (this.viewMode === 'single') {
+          this.viewer.innerHTML = '';
+          this.viewer.appendChild(canvas);
+        }
+      }
 
       this.pageRendering = false;
       if (this.pageNumPending !== null) {
-        this.renderPage(this.pageNumPending);
+        await this.renderPage(this.pageNumPending);
         this.pageNumPending = null;
       }
 
@@ -279,32 +283,62 @@ class PDFViewer {
     this.updateZoomLevel();
   }
 
-  onZoomLevelChange(e) {
+  async onZoomLevelChange(e) {
+    if (!this.pdfDoc) return;
+
     const value = e.target.value;
-    if (value === 'auto') {
-      // 自适应大小
-      const container = document.getElementById('viewerContainer');
-      const viewport = this.pdfDoc.getPage(this.pageNum).getViewport({ scale: 1 });
-      this.scale = Math.min(
-        (container.clientWidth - 40) / viewport.width,
-        (container.clientHeight - 40) / viewport.height
-      );
-    } else if (value === 'page-width') {
-      // 适合页宽
-      const container = document.getElementById('viewerContainer');
-      const viewport = this.pdfDoc.getPage(this.pageNum).getViewport({ scale: 1 });
-      this.scale = (container.clientWidth - 40) / viewport.width;
-    } else if (value === 'page-height') {
-      // 适合页高
-      const container = document.getElementById('viewerContainer');
-      const viewport = this.pdfDoc.getPage(this.pageNum).getViewport({ scale: 1 });
-      this.scale = (container.clientHeight - 40) / viewport.height;
-    } else {
-      // 固定缩放比例
-      this.scale = parseFloat(value);
+    const container = document.getElementById('viewerContainer');
+    
+    try {
+      const page = await this.pdfDoc.getPage(this.pageNum);
+      const viewport = page.getViewport({ scale: 1, rotation: this.rotation });
+      
+      // 计算容器的实际可用空间
+      const containerWidth = container.clientWidth - 40; // 减去内边距
+      const containerHeight = container.clientHeight - 40;
+
+      // 计算新的缩放比例
+      switch (value) {
+        case 'auto':
+          // 自适应：选择宽度或高度缩放中较小的一个
+          const scaleWidth = containerWidth / viewport.width;
+          const scaleHeight = containerHeight / viewport.height;
+          this.scale = Math.min(scaleWidth, scaleHeight);
+          break;
+          
+        case 'page-width':
+          // 适合页宽
+          this.scale = containerWidth / viewport.width;
+          break;
+          
+        case 'page-height':
+          // 适合页高
+          this.scale = containerHeight / viewport.height;
+          break;
+          
+        default:
+          // 固定缩放比例
+          this.scale = parseFloat(value);
+      }
+
+      // 确保缩放比例在合理范围内
+      this.scale = Math.max(0.25, Math.min(4, this.scale));
+
+      // 更新缩放显示
+      await this.updateZoomLevel();
+
+      // 重新渲染
+      if (this.viewMode === 'continuous') {
+        await this.renderContinuousMode();
+      } else {
+        await this.renderPage(this.pageNum);
+      }
+
+      console.log(`Zoom level changed: ${value}, scale: ${this.scale}`); // 添加日志
+    } catch (error) {
+      console.error('Error changing zoom level:', error);
+      this.showError('缩放失败: ' + error.message);
     }
-    this.renderPage(this.pageNum);
-    this.updateZoomLevel();
   }
 
   onRotateLeft() {
@@ -374,24 +408,25 @@ class PDFViewer {
     }, 3000);
   }
 
-  updateZoomLevel() {
+  async updateZoomLevel() {
     const zoomLevel = document.getElementById('zoomLevel');
     const percentage = Math.round(this.scale * 100);
     
-    // 检查是否匹配预设值
-    const presetValue = zoomLevel.querySelector(`option[value="${this.scale}"]`);
-    if (presetValue) {
-      zoomLevel.value = this.scale;
-    } else {
-      // 如果没有匹配的预设值，添加一个临时选项
-      let customOption = zoomLevel.querySelector('.custom-zoom');
-      if (!customOption) {
-        customOption = document.createElement('option');
-        customOption.className = 'custom-zoom';
-        zoomLevel.appendChild(customOption);
-      }
-      customOption.value = this.scale;
-      customOption.textContent = `${percentage}%`;
+    // 移除之前的自定义选项
+    const oldCustomOption = zoomLevel.querySelector('.custom-zoom');
+    if (oldCustomOption) {
+      oldCustomOption.remove();
+    }
+
+    // 添加新的自定义选项
+    const customOption = document.createElement('option');
+    customOption.className = 'custom-zoom';
+    customOption.value = this.scale;
+    customOption.textContent = `${percentage}%`;
+    zoomLevel.appendChild(customOption);
+    
+    // 如果当前值是预设值之一，保持选中状态
+    if (!['auto', 'page-width', 'page-height'].includes(zoomLevel.value)) {
       zoomLevel.value = this.scale;
     }
   }
