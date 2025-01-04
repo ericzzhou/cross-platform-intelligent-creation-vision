@@ -66,12 +66,20 @@
   </div>
 
   <div class="viewer-container">
-    <div class="thumbnails-sidebar">
-      <div class="thumbnails-header">
-        缩略图
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <select id="sidebarMode">
+          <option value="outline">目录</option>
+          <option value="thumbnails">缩略图</option>
+        </select>
       </div>
-      <div class="thumbnails-container" id="thumbnailsContainer">
-        <!-- 缩略图将在这里动态生成 -->
+      <div class="sidebar-content">
+        <div id="outlineContainer" class="outline-container">
+          <!-- 目录将在这里动态生成 -->
+        </div>
+        <div id="thumbnailsContainer" class="thumbnails-container" style="display: none;">
+          <!-- 缩略图将在这里动态生成 -->
+        </div>
       </div>
     </div>
     <div class="main-content">

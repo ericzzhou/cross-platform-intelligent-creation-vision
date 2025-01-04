@@ -11,6 +11,7 @@ class PDFViewer {
     this.viewMode = 'single';
     this.thumbnails = new Map();
     this.thumbnailScale = 0.15; // 减小缩略图缩放比例
+    this.outline = null;
     
     // 初始化 PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -24,6 +25,7 @@ class PDFViewer {
     this.initThumbnails();
     this.initScrollHandlers();
     this.initKeyboardControls();
+    this.initSidebarControls();
   }
 
   initWindowControls() {
@@ -181,8 +183,11 @@ class PDFViewer {
       document.getElementById('pageCount').textContent = this.pdfDoc.numPages;
       this.pageNum = 1;
       
-      // 生成缩略图
-      await this.generateThumbnails();
+      // 生成缩略图和目录
+      await Promise.all([
+        this.generateThumbnails(),
+        this.generateOutline()
+      ]);
       
       // 根据视图模式渲染
       if (this.viewMode === 'continuous') {
@@ -548,6 +553,88 @@ class PDFViewer {
         window.pdfAPI.windowControl.close();
       }
     });
+  }
+
+  // 添加侧边栏控制初始化
+  initSidebarControls() {
+    const sidebarMode = document.getElementById('sidebarMode');
+    sidebarMode.addEventListener('change', (e) => this.onSidebarModeChange(e));
+  }
+
+  // 处理侧边栏模式切换
+  onSidebarModeChange(e) {
+    const mode = e.target.value;
+    const outlineContainer = document.getElementById('outlineContainer');
+    const thumbnailsContainer = document.getElementById('thumbnailsContainer');
+
+    if (mode === 'outline') {
+      outlineContainer.style.display = 'block';
+      thumbnailsContainer.style.display = 'none';
+      if (!this.outline) {
+        this.generateOutline();
+      }
+    } else {
+      outlineContainer.style.display = 'none';
+      thumbnailsContainer.style.display = 'block';
+    }
+  }
+
+  // 生成目录
+  async generateOutline() {
+    try {
+      const outline = await this.pdfDoc.getOutline();
+      if (!outline || outline.length === 0) {
+        const container = document.getElementById('outlineContainer');
+        container.innerHTML = '<div class="no-outline">没有目录</div>';
+        return;
+      }
+
+      this.outline = outline;
+      await this.renderOutline(outline);
+    } catch (error) {
+      console.error('Error generating outline:', error);
+    }
+  }
+
+  // 渲染目录
+  async renderOutline(outline, container = document.getElementById('outlineContainer'), level = 0) {
+    container.innerHTML = '';
+    
+    for (const item of outline) {
+      const div = document.createElement('div');
+      div.className = 'outline-item';
+      div.style.paddingLeft = `${level * 16 + 8}px`;
+      div.textContent = item.title;
+
+      if (item.dest) {
+        div.addEventListener('click', async () => {
+          try {
+            let destination = item.dest;
+            if (typeof destination === 'string') {
+              destination = await this.pdfDoc.getDestination(destination);
+            }
+            
+            if (Array.isArray(destination) && destination.length > 0) {
+              const pageRef = destination[0];
+              const pageNumber = await this.pdfDoc.getPageIndex(pageRef);
+              this.pageNum = pageNumber + 1;
+              await this.renderPage(this.pageNum);
+              this.updateUIState();
+            }
+          } catch (error) {
+            console.error('Error navigating to destination:', error);
+          }
+        });
+      }
+
+      container.appendChild(div);
+
+      if (item.items && item.items.length > 0) {
+        const subContainer = document.createElement('div');
+        container.appendChild(subContainer);
+        await this.renderOutline(item.items, subContainer, level + 1);
+      }
+    }
   }
 }
 
