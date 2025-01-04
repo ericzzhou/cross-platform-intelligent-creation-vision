@@ -12,9 +12,28 @@ class PDFViewer {
     // 初始化 PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    this.initControls();
     this.initWindowControls();
+    this.initControls();
     this.initFileHandling();
+  }
+
+  initWindowControls() {
+    // 窗口控制
+    document.querySelector('.minimize').addEventListener('click', () => {
+      window.pdfAPI.windowControl.minimize();
+    });
+
+    document.querySelector('.maximize').addEventListener('click', () => {
+      window.pdfAPI.windowControl.maximize();
+    });
+
+    document.querySelector('.close').addEventListener('click', () => {
+      window.pdfAPI.windowControl.close();
+    });
+
+    window.pdfAPI.onMaximizeChange((isMaximized) => {
+      document.body.classList.toggle('maximized', isMaximized);
+    });
   }
 
   initControls() {
@@ -36,64 +55,31 @@ class PDFViewer {
     document.getElementById('print').addEventListener('click', () => this.onPrint());
     document.getElementById('save').addEventListener('click', () => this.onSave());
 
-    // 键盘快捷键
-    document.addEventListener('keydown', (e) => this.onKeyDown(e));
-
-    // 鼠标滚轮缩放
-    document.addEventListener('wheel', (e) => {
+    // 滚轮事件
+    document.getElementById('viewerContainer').addEventListener('wheel', (e) => {
       if (e.ctrlKey) {
         e.preventDefault();
-        this.onZoom(e.deltaY < 0 ? 1.1 : 0.9);
-      }
-    });
-  }
-
-  initWindowControls() {
-    const minimizeBtn = document.querySelector('.window-controls .minimize');
-    const maximizeBtn = document.querySelector('.window-controls .maximize');
-    const closeBtn = document.querySelector('.window-controls .close');
-
-    minimizeBtn?.addEventListener('click', () => {
-      window.pdfAPI.windowControl.minimize();
-    });
-
-    maximizeBtn?.addEventListener('click', () => {
-      window.pdfAPI.windowControl.maximize();
-    });
-
-    closeBtn?.addEventListener('click', () => {
-      window.pdfAPI.windowControl.close();
-    });
-
-    // ESC 键关闭窗口
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        window.pdfAPI.windowControl.close();
-      }
-    });
-
-    window.pdfAPI.onMaximizeChange((isMaximized) => {
-      if (isMaximized) {
-        maximizeBtn?.classList.add('maximized');
+        this.onZoom(e.deltaY > 0 ? 0.9 : 1.1);
       } else {
-        maximizeBtn?.classList.remove('maximized');
+        e.preventDefault();
+        if (e.deltaY > 0) {
+          this.onNextPage();
+        } else {
+          this.onPrevPage();
+        }
       }
-    });
+    }, { passive: false });
   }
 
   initFileHandling() {
     window.pdfAPI.onFileLoad(async (data) => {
       this.showLoading(true);
       try {
-        console.log('Received PDF data:', data); // 添加调试日志
         const binary = atob(data.data);
-        const len = binary.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
           bytes[i] = binary.charCodeAt(i);
         }
-        
-        // 直接使用 Uint8Array 加载
         await this.loadPDF(bytes);
         this.updateFileInfo();
       } catch (error) {
@@ -111,32 +97,14 @@ class PDFViewer {
     window.pdfAPI.onTitleUpdate((title) => {
       this.titleElement.textContent = title;
     });
-
-    window.pdfAPI.onPrintError((error) => {
-      this.showError(`打印失败: ${error}`);
-    });
   }
 
   async loadPDF(pdfData) {
     try {
-      // 清理之前的内容
-      this.viewer.innerHTML = '';
-      
-      console.log('Loading PDF with data length:', pdfData.length); // 添加调试日志
-      
-      // 加载 PDF 文档
       this.pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
-      
-      console.log('PDF loaded, pages:', this.pdfDoc.numPages); // 添加调试日志
-      
-      // 更新页码信息
       document.getElementById('pageCount').textContent = this.pdfDoc.numPages;
-      document.getElementById('pageNumber').value = this.pageNum;
-      
-      // 渲染第一页
+      this.pageNum = 1;
       await this.renderPage(this.pageNum);
-      
-      // 更新 UI 状态
       this.updateUIState();
     } catch (error) {
       console.error('Error loading PDF:', error);
@@ -149,32 +117,30 @@ class PDFViewer {
       this.pageNumPending = num;
       return;
     }
-    
+
     this.pageRendering = true;
-    console.log('Rendering page:', num); // 添加调试日志
-    
+    document.getElementById('pageNumber').value = num;
+
     try {
       const page = await this.pdfDoc.getPage(num);
       const viewport = page.getViewport({ scale: this.scale, rotation: this.rotation });
-      
+
       const canvas = document.createElement('canvas');
       canvas.className = 'page';
       const context = canvas.getContext('2d');
       canvas.height = viewport.height;
       canvas.width = viewport.width;
-      
+
       const renderContext = {
         canvasContext: context,
         viewport: viewport
       };
-      
+
       await page.render(renderContext).promise;
-      console.log('Page rendered successfully'); // 添加调试日志
-      
-      // 清理旧页面并添加新页面
+
       this.viewer.innerHTML = '';
       this.viewer.appendChild(canvas);
-      
+
       this.pageRendering = false;
       if (this.pageNumPending !== null) {
         this.renderPage(this.pageNumPending);
@@ -191,12 +157,14 @@ class PDFViewer {
     if (this.pageNum <= 1) return;
     this.pageNum--;
     this.renderPage(this.pageNum);
+    this.updateUIState();
   }
 
   onNextPage() {
     if (this.pageNum >= this.pdfDoc.numPages) return;
     this.pageNum++;
     this.renderPage(this.pageNum);
+    this.updateUIState();
   }
 
   onPageNumberChange(e) {
@@ -204,6 +172,7 @@ class PDFViewer {
     if (num && num > 0 && num <= this.pdfDoc.numPages) {
       this.pageNum = num;
       this.renderPage(this.pageNum);
+      this.updateUIState();
     }
   }
 
@@ -224,28 +193,22 @@ class PDFViewer {
   onZoomLevelChange(e) {
     const value = e.target.value;
     if (value === 'auto') {
-      // 自适应逻辑
-      const containerWidth = this.viewer.clientWidth;
-      const containerHeight = this.viewer.clientHeight;
+      // 自适应大小
+      const container = document.getElementById('viewerContainer');
       const page = this.pdfDoc.getPage(this.pageNum);
       const viewport = page.getViewport({ scale: 1 });
       this.scale = Math.min(
-        containerWidth / viewport.width,
-        containerHeight / viewport.height
+        container.clientWidth / viewport.width,
+        container.clientHeight / viewport.height
       );
     } else if (value === 'page-width') {
-      // 适合页宽逻辑
-      const containerWidth = this.viewer.clientWidth;
+      // 适合页宽
+      const container = document.getElementById('viewerContainer');
       const page = this.pdfDoc.getPage(this.pageNum);
       const viewport = page.getViewport({ scale: 1 });
-      this.scale = containerWidth / viewport.width;
-    } else if (value === 'page-height') {
-      // 适合页高逻辑
-      const containerHeight = this.viewer.clientHeight;
-      const page = this.pdfDoc.getPage(this.pageNum);
-      const viewport = page.getViewport({ scale: 1 });
-      this.scale = containerHeight / viewport.height;
+      this.scale = container.clientWidth / viewport.width;
     } else {
+      // 固定缩放比例
       this.scale = parseFloat(value);
     }
     this.renderPage(this.pageNum);
@@ -261,25 +224,28 @@ class PDFViewer {
     this.renderPage(this.pageNum);
   }
 
-  onPrint() {
-    window.pdfAPI.print();
+  async onPrint() {
+    try {
+      await window.pdfAPI.print();
+    } catch (error) {
+      this.showError('打印失败: ' + error);
+    }
   }
 
-  onSave() {
-    window.pdfAPI.save();
+  async onSave() {
+    try {
+      await window.pdfAPI.save();
+    } catch (error) {
+      this.showError('保存失败: ' + error);
+    }
   }
 
-  onKeyDown(e) {
-    if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-      this.onPrevPage();
-    } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-      this.onNextPage();
-    } else if (e.key === 'Home') {
-      this.pageNum = 1;
-      this.renderPage(this.pageNum);
-    } else if (e.key === 'End') {
-      this.pageNum = this.pdfDoc.numPages;
-      this.renderPage(this.pageNum);
+  async updateFileInfo() {
+    const info = await window.pdfAPI.getFileInfo();
+    if (info) {
+      document.querySelector('.file-size').textContent = this.formatFileSize(info.size);
+      document.querySelector('.file-time').textContent = new Date(info.mtime).toLocaleString();
+      document.querySelector('.file-path').textContent = info.path;
     }
   }
 
@@ -291,15 +257,6 @@ class PDFViewer {
     prevButton.disabled = this.pageNum <= 1;
     nextButton.disabled = this.pageNum >= this.pdfDoc.numPages;
     pageNumber.max = this.pdfDoc.numPages;
-  }
-
-  async updateFileInfo() {
-    const info = await window.pdfAPI.getFileInfo();
-    if (info) {
-      document.querySelector('.file-size').textContent = this.formatFileSize(info.size);
-      document.querySelector('.file-time').textContent = new Date(info.mtime).toLocaleString();
-      document.querySelector('.file-path').textContent = info.path;
-    }
   }
 
   formatFileSize(bytes) {

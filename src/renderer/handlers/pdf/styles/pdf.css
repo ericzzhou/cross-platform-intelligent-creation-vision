@@ -130,13 +130,8 @@ body {
 /* 查看器容器 */
 .viewer-container {
   flex: 1;
-  overflow: auto;
   position: relative;
   background: #f0f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
 }
 
 #viewerContainer {
@@ -146,12 +141,12 @@ body {
   right: 0;
   bottom: 0;
   overflow: auto;
+  padding: 20px;
 }
 
 #viewer {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin: auto;
+  margin: 0 auto;
+  background: transparent;
 }
 
 /* 加载状态 */
@@ -230,12 +225,26 @@ body {
 /* PDF 页面样式 */
 .page {
   display: block;
-  margin: 0 auto;
+  margin: 0 auto 20px;
   background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page:last-child {
+  margin-bottom: 0;
 }
 
 /* 缩放控制 */
 #zoomLevel {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  outline: none;
+  background: white;
+}
+
+/* 视图模式选择器样式 */
+#viewMode {
   padding: 4px 8px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
