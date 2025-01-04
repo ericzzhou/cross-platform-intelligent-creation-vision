@@ -735,6 +735,50 @@ class PDFViewer {
       div.style.paddingLeft = `${level * 16 + 8}px`;
       div.textContent = item.title;
 
+      // 添加 tooltip 功能
+      let tooltip = null;
+      let tooltipTimeout = null;
+
+      div.addEventListener('mouseenter', (e) => {
+        // 只有当文本被截断时才显示 tooltip
+        if (div.scrollWidth > div.clientWidth) {
+          tooltipTimeout = setTimeout(() => {
+            tooltip = document.createElement('div');
+            tooltip.className = 'outline-tooltip';
+            tooltip.textContent = item.title;
+            document.body.appendChild(tooltip);
+
+            const rect = div.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            // 计算 tooltip 位置
+            let left = rect.right + 8;
+            let top = rect.top;
+
+            // 确保 tooltip 不会超出窗口
+            if (left + tooltip.offsetWidth > window.innerWidth) {
+              left = rect.left - tooltip.offsetWidth - 8;
+            }
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            
+            // 显示 tooltip
+            requestAnimationFrame(() => {
+              tooltip.style.opacity = '1';
+            });
+          }, 500); // 500ms 延迟显示
+        }
+      });
+
+      div.addEventListener('mouseleave', () => {
+        clearTimeout(tooltipTimeout);
+        if (tooltip) {
+          tooltip.remove();
+          tooltip = null;
+        }
+      });
+
       if (item.dest) {
         try {
           let destination = item.dest;
@@ -746,6 +790,11 @@ class PDFViewer {
             const pageRef = destination[0];
             const pageNumber = await this.pdfDoc.getPageIndex(pageRef) + 1;
             div.dataset.page = pageNumber;
+            
+            // 检查是否是当前页面，添加高亮
+            if (pageNumber === this.pageNum) {
+              div.classList.add('active');
+            }
           }
         } catch (error) {
           console.error('Error setting page data:', error);
@@ -764,6 +813,13 @@ class PDFViewer {
               this.pageNum = pageNumber + 1;
               await this.renderPage(this.pageNum);
               this.updateUIState();
+              
+              // 更新高亮状态
+              const currentActive = container.querySelector('.outline-item.active');
+              if (currentActive) {
+                currentActive.classList.remove('active');
+              }
+              div.classList.add('active');
             }
           } catch (error) {
             console.error('Error navigating to destination:', error);

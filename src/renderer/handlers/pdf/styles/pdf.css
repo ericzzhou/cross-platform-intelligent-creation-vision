@@ -197,6 +197,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
 }
 
 .outline-item:hover {
@@ -206,6 +207,22 @@ body {
 .outline-item.active {
   background: var(--primary-color);
   color: white;
+}
+
+/* 目录项 tooltip */
+.outline-tooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  max-width: 300px;
+  word-wrap: break-word;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 /* 缩略图侧边栏 */
