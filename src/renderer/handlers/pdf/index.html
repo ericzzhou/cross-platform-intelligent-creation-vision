@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PDF 查看器</title>
+  <link rel="stylesheet" href="styles/pdf.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title">未命名</div>
+    <div class="window-controls">
+      <button class="minimize" title="最小化">
+        <i class="ri-subtract-line"></i>
+      </button>
+      <button class="maximize" title="最大化">
+        <i class="ri-checkbox-blank-line maximize-icon"></i>
+        <i class="ri-window-fill restore-icon"></i>
+      </button>
+      <button class="close" title="关闭">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="left-controls">
+      <button id="prevPage" title="上一页"><i class="ri-arrow-left-s-line"></i></button>
+      <div class="page-controls">
+        <input type="number" id="pageNumber" min="1" value="1">
+        <span>/</span>
+        <span id="pageCount">1</span>
+      </div>
+      <button id="nextPage" title="下一页"><i class="ri-arrow-right-s-line"></i></button>
+    </div>
+    <div class="center-controls">
+      <button id="zoomOut" title="缩小"><i class="ri-zoom-out-line"></i></button>
+      <select id="zoomLevel">
+        <option value="auto">自适应</option>
+        <option value="page-width">适合页宽</option>
+        <option value="page-height">适合页高</option>
+        <option value="0.5">50%</option>
+        <option value="0.75">75%</option>
+        <option value="1">100%</option>
+        <option value="1.25">125%</option>
+        <option value="1.5">150%</option>
+        <option value="2">200%</option>
+      </select>
+      <button id="zoomIn" title="放大"><i class="ri-zoom-in-line"></i></button>
+    </div>
+    <div class="right-controls">
+      <button id="rotateLeft" title="向左旋转"><i class="ri-anticlockwise-line"></i></button>
+      <button id="rotateRight" title="向右旋转"><i class="ri-clockwise-line"></i></button>
+      <button id="print" title="打印"><i class="ri-printer-line"></i></button>
+      <button id="save" title="保存"><i class="ri-save-line"></i></button>
+    </div>
+  </div>
+
+  <div class="viewer-container">
+    <div class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <div class="loading-text">加载中...</div>
+    </div>
+    <div class="error" style="display: none;">
+      <i class="ri-error-warning-line"></i>
+      <div class="error-message"></div>
+    </div>
+    <div id="viewerContainer">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-left">
+      <span class="file-type">PDF</span>
+    </div>
+    <div class="status-right">
+      <span class="file-size"></span>
+      <span class="file-time"></span>
+      <span class="file-path"></span>
+    </div>
+  </div>
+
+  <script src="scripts/viewer.js"></script>
+</body>
+</html> 

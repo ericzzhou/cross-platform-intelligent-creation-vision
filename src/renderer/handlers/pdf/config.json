@@ -1,0 +1,11 @@
+{
+  "name": "PDF 查看器",
+  "extensions": [".pdf"],
+  "window": {
+    "width": 1024,
+    "height": 768,
+    "minWidth": 800,
+    "minHeight": 600,
+    "frame": false
+  }
+} 

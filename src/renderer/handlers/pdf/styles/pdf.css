@@ -1,0 +1,244 @@
+:root {
+  --primary-color: #2196F3;
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --border-color: #e0e0e0;
+  --toolbar-bg: #f5f5f5;
+  --hover-color: #e3f2fd;
+  --title-bar-bg: #2c2c2c;
+  --title-bar-text: #ffffff;
+}
+
+/* 基础样式 */
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  user-select: none;
+}
+
+/* 标题栏样式 */
+.title-bar {
+  height: 32px;
+  background: var(--title-bar-bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  -webkit-app-region: drag;
+  color: var(--title-bar-text);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: normal;
+  margin-right: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 120px);
+}
+
+/* 窗口控制按钮 */
+.window-controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.window-controls button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--title-bar-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.window-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.window-controls .close:hover {
+  background: #e81123;
+}
+
+/* 工具栏样式 */
+.toolbar {
+  height: 40px;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.toolbar button {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar button:hover {
+  background: var(--hover-color);
+}
+
+.toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.left-controls,
+.center-controls,
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-controls input {
+  width: 50px;
+  text-align: center;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+/* 查看器容器 */
+.viewer-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+#viewerContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+}
+
+#viewer {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: auto;
+}
+
+/* 加载状态 */
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--primary-color);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: var(--text-color);
+}
+
+/* 错误状态 */
+.error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.error i {
+  font-size: 48px;
+  color: #f44336;
+}
+
+/* 状态栏 */
+.status-bar {
+  height: 24px;
+  background: var(--toolbar-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #666;
+}
+
+.status-right {
+  display: flex;
+  gap: 16px;
+}
+
+/* PDF 页面样式 */
+.page {
+  display: block;
+  margin: 0 auto;
+  background: white;
+}
+
+/* 缩放控制 */
+#zoomLevel {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  outline: none;
+  background: white;
+} 

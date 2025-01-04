@@ -17,7 +17,8 @@
     "electron-updater": "^5.0.0",
     "highlight.js": "^11.11.1",
     "iconv-lite": "^0.6.3",
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.0",
+    "pdfjs-dist": "3.11.174"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
@@ -71,6 +72,12 @@
           ],
           "name": "Image",
           "description": "Image File",
+          "role": "Viewer"
+        },
+        {
+          "ext": ["pdf"],
+          "name": "PDF Document",
+          "description": "PDF Document",
           "role": "Viewer"
         }
       ]
