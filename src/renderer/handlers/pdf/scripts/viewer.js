@@ -26,6 +26,10 @@ class PDFViewer {
     this.initScrollHandlers();
     this.initKeyboardControls();
     this.initSidebarControls();
+
+    // 添加用户滚动标志
+    this.userScrolling = false;
+    this.userScrollTimeout = null;
   }
 
   initWindowControls() {
@@ -509,13 +513,17 @@ class PDFViewer {
     await this.renderPage(this.pageNum);
   }
 
-  // 添加滚动处理方法
+  // 修改滚动处理方法
   initScrollHandlers() {
     const thumbnailsContainer = document.querySelector('.thumbnails-container');
+    const outlineContainer = document.getElementById('outlineContainer');
     const viewerContainer = document.getElementById('viewerContainer');
 
     // 缩略图容器滚动处理
     thumbnailsContainer.addEventListener('wheel', (e) => {
+      this.userScrolling = true;
+      clearTimeout(this.userScrollTimeout);
+      
       const maxScroll = thumbnailsContainer.scrollHeight - thumbnailsContainer.clientHeight;
       const currentScroll = thumbnailsContainer.scrollTop;
       const isScrollingUp = e.deltaY < 0;
@@ -523,13 +531,29 @@ class PDFViewer {
       const isAtTop = currentScroll <= 0;
       const isAtBottom = currentScroll >= maxScroll;
 
-      // 阻止滚动传播到主容器
       e.stopPropagation();
 
-      // 在边界处阻止滚动
       if ((isAtTop && isScrollingUp) || (isAtBottom && isScrollingDown)) {
         e.preventDefault();
       }
+
+      // 3秒后重置用户滚动标志
+      this.userScrollTimeout = setTimeout(() => {
+        this.userScrolling = false;
+      }, 3000);
+    }, { passive: false });
+
+    // 目录容器滚动处理
+    outlineContainer.addEventListener('wheel', (e) => {
+      this.userScrolling = true;
+      clearTimeout(this.userScrollTimeout);
+      
+      e.stopPropagation();
+
+      // 3秒后重置用户滚动标志
+      this.userScrollTimeout = setTimeout(() => {
+        this.userScrolling = false;
+      }, 3000);
     }, { passive: false });
 
     // 主容器滚动处理
@@ -552,6 +576,72 @@ class PDFViewer {
       }
       // 连续模式下自然滚动，不需要特殊处理
     }, { passive: false });
+  }
+
+  // 修改滚动到可见区域的方法
+  scrollIntoViewIfNeeded(element, container) {
+    // 如果用户正在滚动，不执行自动滚动
+    if (this.userScrolling) return;
+
+    const elementRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    
+    if (elementRect.top < containerRect.top) {
+      container.scrollTop += elementRect.top - containerRect.top - 8;
+    } else if (elementRect.bottom > containerRect.bottom) {
+      container.scrollTop += elementRect.bottom - containerRect.bottom + 8;
+    }
+  }
+
+  // 添加目录高亮更新方法
+  updateOutlineHighlight(pageNum) {
+    if (!this.outline) return;
+
+    const outlineContainer = document.getElementById('outlineContainer');
+    const currentActive = outlineContainer.querySelector('.outline-item.active');
+    if (currentActive) {
+      currentActive.classList.remove('active');
+    }
+
+    // 查找当前页面对应的目录项
+    const findOutlineItemForPage = async (items) => {
+      for (const item of items) {
+        if (item.dest) {
+          try {
+            let destination = item.dest;
+            if (typeof destination === 'string') {
+              destination = await this.pdfDoc.getDestination(destination);
+            }
+            
+            if (Array.isArray(destination) && destination.length > 0) {
+              const pageRef = destination[0];
+              const itemPageNum = await this.pdfDoc.getPageIndex(pageRef) + 1;
+              
+              if (itemPageNum === pageNum) {
+                const element = outlineContainer.querySelector(`[data-page="${itemPageNum}"]`);
+                if (element) {
+                  element.classList.add('active');
+                  this.scrollIntoViewIfNeeded(element, outlineContainer);
+                  return true;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error checking outline item:', error);
+          }
+        }
+
+        if (item.items && item.items.length > 0) {
+          const found = await findOutlineItemForPage(item.items);
+          if (found) return true;
+        }
+      }
+      return false;
+    };
+
+    if (this.outline) {
+      findOutlineItemForPage(this.outline);
+    }
   }
 
   // 添加键盘控制初始化方法
@@ -657,72 +747,6 @@ class PDFViewer {
         container.appendChild(subContainer);
         await this.renderOutline(item.items, subContainer, level + 1);
       }
-    }
-  }
-
-  // 添加滚动到可见区域的辅助方法
-  scrollIntoViewIfNeeded(element, container) {
-    const elementRect = element.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    
-    // 检查元素是否在容器可见区域内
-    if (elementRect.top < containerRect.top) {
-      // 如果元素在容器上方，滚动到元素顶部
-      container.scrollTop += elementRect.top - containerRect.top - 8;
-    } else if (elementRect.bottom > containerRect.bottom) {
-      // 如果元素在容器下方，滚动到元素底部
-      container.scrollTop += elementRect.bottom - containerRect.bottom + 8;
-    }
-  }
-
-  // 添加目录高亮更新方法
-  updateOutlineHighlight(pageNum) {
-    if (!this.outline) return;
-
-    const outlineContainer = document.getElementById('outlineContainer');
-    const currentActive = outlineContainer.querySelector('.outline-item.active');
-    if (currentActive) {
-      currentActive.classList.remove('active');
-    }
-
-    // 查找当前页面对应的目录项
-    const findOutlineItemForPage = async (items) => {
-      for (const item of items) {
-        if (item.dest) {
-          try {
-            let destination = item.dest;
-            if (typeof destination === 'string') {
-              destination = await this.pdfDoc.getDestination(destination);
-            }
-            
-            if (Array.isArray(destination) && destination.length > 0) {
-              const pageRef = destination[0];
-              const itemPageNum = await this.pdfDoc.getPageIndex(pageRef) + 1;
-              
-              if (itemPageNum === pageNum) {
-                const element = outlineContainer.querySelector(`[data-page="${itemPageNum}"]`);
-                if (element) {
-                  element.classList.add('active');
-                  this.scrollIntoViewIfNeeded(element, outlineContainer);
-                  return true;
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error checking outline item:', error);
-          }
-        }
-
-        if (item.items && item.items.length > 0) {
-          const found = await findOutlineItemForPage(item.items);
-          if (found) return true;
-        }
-      }
-      return false;
-    };
-
-    if (this.outline) {
-      findOutlineItemForPage(this.outline);
     }
   }
 }
