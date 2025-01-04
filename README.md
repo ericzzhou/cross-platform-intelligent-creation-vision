@@ -156,7 +156,7 @@ contextBridge.exposeInMainWorld('typeAPI', {
 ## 7. 测试清单
 
 1. 基础功能
-   - [ ] 窗口控制按钮
+   - [ ] 窗口控制按钮，最小化、最大化、关闭 按钮操作证
    - [ ] 文件拖放
    - [ ] ESC 关闭
    - [ ] 标题栏显示

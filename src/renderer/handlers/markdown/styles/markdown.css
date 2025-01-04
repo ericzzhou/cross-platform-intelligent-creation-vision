@@ -1,10 +1,307 @@
-.markdown-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  word-wrap: break-word;
+:root {
+  --font-size: 14px;
+  --primary-color: #2196F3;
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --border-color: #e0e0e0;
+  --toolbar-bg: #f5f5f5;
+  --hover-color: #e3f2fd;
+  --title-bar-bg: #2c2c2c;
+  --title-bar-text: #ffffff;
 }
 
+/* 继承基础样式 */
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* 标题栏样式 */
+.title-bar {
+  height: 32px;
+  background: var(--title-bar-bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  -webkit-app-region: drag;
+  color: var(--title-bar-text);
+  user-select: none;
+  font-size: 13px;
+}
+
+.title {
+  font-weight: normal;
+  margin-right: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 120px); /* 为窗口控制按钮留出空间 */
+}
+
+/* 窗口控制按钮 */
+.window-controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+  margin-left: 16px;
+}
+
+.window-controls button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--title-bar-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.window-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.window-controls .close:hover {
+  background: #e81123;
+}
+
+/* 最大化/还原图标切换 */
+.window-controls .maximize .restore-icon {
+  display: none;
+}
+
+.window-controls .maximize.maximized .maximize-icon {
+  display: none;
+}
+
+.window-controls .maximize.maximized .restore-icon {
+  display: block;
+}
+
+/* 图标大小调整 */
+.window-controls i {
+  font-size: 16px;
+}
+
+/* 编辑器容器 */
+.editor-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: var(--bg-color);
+  position: relative;
+  gap: 1px;
+}
+
+/* 编辑器部分 */
+.editor-section {
+  flex: 1;
+  display: flex;
+  position: relative;
+  background: #fafafa;
+}
+
+/* 预览部分 */
+.preview-section {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  background: #fff;
+  border-left: 1px solid var(--border-color);
+}
+
+.preview-section .markdown-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 预览模式下隐藏编辑器 */
+body.preview-mode .editor-section {
+  display: none;
+}
+
+body.preview-mode .preview-section {
+  flex: 2;
+}
+
+/* 编辑模式下隐藏预览 */
+body.edit-mode .preview-section {
+  display: none;
+}
+
+body.edit-mode .editor-section {
+  flex: 2;
+}
+
+/* 分屏模式下的布局 */
+body.split-mode .editor-section,
+body.split-mode .preview-section {
+  flex: 1;
+}
+
+/* 模式切换按钮样式 */
+.mode-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-controls button {
+  padding: 4px 12px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mode-controls button:hover {
+  background: var(--hover-color);
+}
+
+.mode-controls button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Markdown 预览样式 */
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  word-wrap: break-word;
+  padding: 20px;
+}
+
+/* 代码高亮样式 */
+.hljs {
+  background: #f6f8fa;
+  border-radius: 4px;
+  padding: 16px;
+  overflow: auto;
+}
+
+/* 其他样式继承自 text 处理器 */
+
+/* 搜索栏样式 */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-bar input {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  outline: none;
+  font-size: 14px;
+}
+
+.search-bar button {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-bar button:hover {
+  background: var(--hover-color);
+}
+
+/* 行号样式 */
+.line-numbers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  padding: 20px 0;
+  background: #f0f0f0;
+  border-right: 1px solid var(--border-color);
+  user-select: none;
+  text-align: center;
+  color: #999;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.line-number {
+  height: 1.6em;
+  line-height: 1.6em;
+}
+
+/* 编辑器样式优化 */
+#editor {
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  outline: none;
+  margin: 0;
+  padding: 20px 20px 20px 60px;
+  font-family: 'Fira Code', monospace;
+  font-size: var(--font-size);
+  line-height: 1.6;
+  background: #fafafa;
+  color: var(--text-color);
+  tab-size: 4;
+}
+
+/* Markdown 预览样式增强 */
+.markdown-body {
+  padding: 20px;
+  font-size: 16px;
+}
+
+.markdown-body pre {
+  background: #f6f8fa;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.markdown-body code {
+  font-family: 'Fira Code', monospace;
+}
+
+/* 状态栏样式优化 */
+.status-bar {
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #666;
+  background: var(--toolbar-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 工具栏样式 */
+.toolbar {
+  display: flex;
+  padding: 8px 16px;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  gap: 16px;
+  align-items: center;
+  height: 40px;
+}
+
+/* Markdown 样式增强 */
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3,
@@ -17,8 +314,8 @@
   line-height: 1.25;
 }
 
-.markdown-body h1 { font-size: 2em; }
-.markdown-body h2 { font-size: 1.5em; }
+.markdown-body h1 { font-size: 2em; border-bottom: 1px solid #eaecef; }
+.markdown-body h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; }
 .markdown-body h3 { font-size: 1.25em; }
 
 .markdown-body p {
@@ -34,23 +331,13 @@
   border-radius: 3px;
 }
 
-.markdown-body pre {
-  padding: 16px;
-  overflow: auto;
-  font-size: 85%;
-  line-height: 1.45;
-  background-color: #f6f8fa;
-  border-radius: 3px;
-}
-
 .markdown-body pre code {
-  display: inline;
   padding: 0;
   margin: 0;
-  overflow: visible;
-  line-height: inherit;
-  word-wrap: normal;
-  background-color: transparent;
+  font-size: 100%;
+  word-break: normal;
+  white-space: pre;
+  background: transparent;
   border: 0;
 }
 
@@ -58,67 +345,58 @@
   padding: 0 1em;
   color: #6a737d;
   border-left: 0.25em solid #dfe2e5;
-  margin: 0;
+  margin: 0 0 16px 0;
 }
 
-.markdown-body ul,
-.markdown-body ol {
-  padding-left: 2em;
-  margin-top: 0;
-  margin-bottom: 16px;
+/* 加载状态 */
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.markdown-body table {
-  display: block;
-  width: 100%;
-  overflow: auto;
-  border-spacing: 0;
-  border-collapse: collapse;
+.loading::after {
+  content: '';
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--primary-color);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
 }
 
-.markdown-body table th,
-.markdown-body table td {
-  padding: 6px 13px;
-  border: 1px solid #dfe2e5;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.markdown-body table tr {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
+/* 错误提示样式 */
+.error-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  background: #f44336;
+  color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
 }
 
-.markdown-body table tr:nth-child(2n) {
-  background-color: #f6f8fa;
-}
-
-/* 深色主题 */
-body.dark-theme .markdown-body {
-  color: #d4d4d4;
-}
-
-body.dark-theme .markdown-body code {
-  background-color: rgba(255,255,255,0.1);
-}
-
-body.dark-theme .markdown-body pre {
-  background-color: #2d2d2d;
-}
-
-body.dark-theme .markdown-body blockquote {
-  color: #8b949e;
-  border-left-color: #3b434b;
-}
-
-body.dark-theme .markdown-body table th,
-body.dark-theme .markdown-body table td {
-  border-color: #3b434b;
-}
-
-body.dark-theme .markdown-body table tr {
-  background-color: transparent;
-  border-color: #3b434b;
-}
-
-body.dark-theme .markdown-body table tr:nth-child(2n) {
-  background-color: #2d2d2d;
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 } 

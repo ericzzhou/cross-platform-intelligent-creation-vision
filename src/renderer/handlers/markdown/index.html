@@ -3,48 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <title>Markdown 编辑器</title>
-  <link rel="stylesheet" href="./styles/editor.css">
-  <link rel="stylesheet" href="./styles/markdown.css">
+  <link rel="stylesheet" href="styles/markdown.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css">
+  <!-- 修改 CDN 引用 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
 </head>
 <body>
   <div class="title-bar">
-    <div class="title"></div>
+    <div class="title">未命名</div>
     <div class="window-controls">
-      <button id="minimize">─</button>
-      <button id="maximize">□</button>
-      <button id="close">×</button>
+      <button class="minimize" title="最小化">
+        <i class="ri-subtract-line"></i>
+      </button>
+      <button class="maximize" title="最大化">
+        <i class="ri-checkbox-blank-line maximize-icon"></i>
+        <i class="ri-window-fill restore-icon"></i>
+      </button>
+      <button class="close" title="关闭">
+        <i class="ri-close-line"></i>
+      </button>
     </div>
   </div>
 
   <div class="toolbar">
-    <button id="save">保存</button>
-    <button id="saveAs">另存为</button>
-    <button id="exportPdf">导出 PDF</button>
-    <div class="editor-settings">
-      <select id="theme">
-        <option value="light">浅色</option>
-        <option value="dark" selected>深色</option>
-      </select>
+    <div class="mode-controls">
+      <button id="editMode" class="active" title="编辑模式"><i class="ri-edit-line"></i></button>
+      <button id="previewMode" title="预览模式"><i class="ri-eye-line"></i></button>
+      <button id="splitMode" title="分屏模式"><i class="ri-layout-2-line"></i></button>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索... (Ctrl+F)">
+      <input type="text" id="replaceInput" placeholder="替换...">
+      <button id="findPrev" title="查找上一个"><i class="ri-arrow-up-s-line"></i></button>
+      <button id="findNext" title="查找下一个"><i class="ri-arrow-down-s-line"></i></button>
+      <button id="replace" title="替换"><i class="ri-arrow-right-line"></i></button>
+      <button id="replaceAll" title="全部替换"><i class="ri-list-check-2"></i></button>
+    </div>
+    <div class="font-controls">
+      <button id="fontDecrease" title="减小字体"><i class="ri-text-spacing"></i></button>
+      <button id="fontIncrease" title="增大字体"><i class="ri-text"></i></button>
     </div>
   </div>
 
   <div class="editor-container">
-    <div class="editor-panel">
+    <div class="loading" style="display: none;"></div>
+    <div class="editor-section">
       <div class="line-numbers"></div>
       <textarea id="editor" spellcheck="false"></textarea>
     </div>
-    <div class="preview-panel">
-      <div id="preview" class="markdown-body"></div>
+    <div class="preview-section markdown-body">
+      <div id="preview"></div>
     </div>
   </div>
 
   <div class="status-bar">
-    <span class="file-info">Markdown</span>
-    <span class="cursor-position">行 1, 列 1</span>
+    <div class="status-left">
+      <span class="cursor-position">行: 1, 列: 1</span>
+      <span class="encoding">UTF-8</span>
+      <span class="file-type">MD</span>
+      <span class="word-count">字数: 0 字符: 0</span>
+    </div>
+    <div class="status-right">
+      <span class="file-size">0 B</span>
+      <span class="file-time"></span>
+      <span class="file-path"></span>
+      <span class="save-status"></span>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js/highlight.min.js"></script>
-  <script src="./scripts/editor.js"></script>
+  <!-- 修改脚本引用顺序和来源 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="scripts/editor.js"></script>
 </body>
 </html> 

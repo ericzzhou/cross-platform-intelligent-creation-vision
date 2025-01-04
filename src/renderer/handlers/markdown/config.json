@@ -1,7 +1,10 @@
 {
-  "type": "markdown",
   "name": "Markdown 编辑器",
-  "description": "支持 Markdown 文件的编辑和实时预览",
-  "supportedExtensions": [".md", ".markdown"],
-  "icon": "markdown.svg"
+  "extensions": [".md"],
+  "window": {
+    "width": 1024,
+    "height": 768,
+    "minWidth": 800,
+    "minHeight": 600
+  }
 } 
