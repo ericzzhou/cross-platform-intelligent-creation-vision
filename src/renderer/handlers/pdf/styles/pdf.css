@@ -144,6 +144,8 @@ body {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: relative;
+  transition: width 0.1s ease;
 }
 
 .sidebar-header {
@@ -274,6 +276,7 @@ body {
   width: 144px;
   margin-left: auto;
   margin-right: auto;
+  transition: width 0.1s ease;
 }
 
 .thumbnail.active {
@@ -288,6 +291,7 @@ body {
   width: 100%;
   height: auto;
   display: block;
+  transition: width 0.1s ease, height 0.1s ease;
 }
 
 .thumbnail-label {
@@ -456,4 +460,45 @@ body {
 .thumbnails-container::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
+}
+
+/* 侧边栏拖动调整大小 */
+.sidebar {
+  position: relative;
+  transition: width 0.1s ease;
+}
+
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+/* 拖动时的样式 */
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.resizing .sidebar {
+  transition: none;
+}
+
+body.resizing .thumbnail canvas {
+  transition: none;
+}
+
+/* 缩略图样式调整 */
+.thumbnail {
+  transition: width 0.1s ease;
+}
+
+.thumbnail canvas {
+  width: 100%;
+  height: auto;
+  transition: width 0.1s ease, height 0.1s ease;
 } 

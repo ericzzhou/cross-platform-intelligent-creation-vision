@@ -30,6 +30,10 @@ class PDFViewer {
     // 添加用户滚动标志
     this.userScrolling = false;
     this.userScrollTimeout = null;
+
+    this.initResizeHandlers();
+    this.minSidebarWidth = 160; // 最小宽度
+    this.maxSidebarWidth = 400; // 最大宽度
   }
 
   initWindowControls() {
@@ -131,47 +135,70 @@ class PDFViewer {
   }
 
   // 生成缩略图
-  async generateThumbnails() {
+  async generateThumbnails(containerWidth = null) {
     const container = document.getElementById('thumbnailsContainer');
-    container.innerHTML = '';
-
-    // 创建一个文档片段来优化性能
+    
+    // 保存滚动位置
+    const scrollTop = container.scrollTop;
+    
+    // 清空容器但保留现有缩略图直到新的准备好
+    const oldThumbnails = container.innerHTML;
     const fragment = document.createDocumentFragment();
 
-    for (let i = 1; i <= this.pdfDoc.numPages; i++) {
-      const page = await this.pdfDoc.getPage(i);
-      // 计算合适的缩放比例
-      const originalViewport = page.getViewport({ scale: 1 });
-      const containerWidth = 144; // 缩略图容器宽度
-      const scale = containerWidth / originalViewport.width;
-      const viewport = page.getViewport({ scale });
-      
-      const thumbnailDiv = document.createElement('div');
-      thumbnailDiv.className = 'thumbnail';
-      thumbnailDiv.dataset.pageNumber = i;
-      
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      
-      await page.render({
-        canvasContext: context,
-        viewport: viewport
-      }).promise;
-      
-      const label = document.createElement('div');
-      label.className = 'thumbnail-label';
-      label.textContent = i;
-      
-      thumbnailDiv.appendChild(canvas);
-      thumbnailDiv.appendChild(label);
-      fragment.appendChild(thumbnailDiv);
-      
-      this.thumbnails.set(i, thumbnailDiv);
+    if (!containerWidth) {
+      const sidebar = document.querySelector('.sidebar');
+      const thumbnailPadding = 16;
+      const thumbnailBorder = 4;
+      containerWidth = sidebar.offsetWidth - thumbnailPadding - thumbnailBorder;
     }
 
-    container.appendChild(fragment);
+    try {
+      for (let i = 1; i <= this.pdfDoc.numPages; i++) {
+        const page = await this.pdfDoc.getPage(i);
+        const originalViewport = page.getViewport({ scale: 1 });
+        const scale = containerWidth / originalViewport.width;
+        const viewport = page.getViewport({ scale });
+        
+        const thumbnailDiv = document.createElement('div');
+        thumbnailDiv.className = 'thumbnail';
+        thumbnailDiv.dataset.pageNumber = i;
+        thumbnailDiv.style.width = `${containerWidth}px`;
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+        
+        const label = document.createElement('div');
+        label.className = 'thumbnail-label';
+        label.textContent = i;
+        
+        thumbnailDiv.appendChild(canvas);
+        thumbnailDiv.appendChild(label);
+        fragment.appendChild(thumbnailDiv);
+        
+        this.thumbnails.set(i, thumbnailDiv);
+      }
+
+      // 只在所有缩略图都准备好后才更新容器
+      container.innerHTML = '';
+      container.appendChild(fragment);
+      
+      // 恢复滚动位置
+      container.scrollTop = scrollTop;
+      
+      // 更新当前页面的高亮状态
+      this.updateThumbnailHighlight();
+    } catch (error) {
+      console.error('Error generating thumbnails:', error);
+      // 如果生成失败，恢复原来的缩略图
+      container.innerHTML = oldThumbnails;
+    }
   }
 
   // 更新缩略图高亮状态
@@ -674,6 +701,10 @@ class PDFViewer {
     } else {
       outlineContainer.style.display = 'none';
       thumbnailsContainer.style.display = 'block';
+      // 检查缩略图是否需要重新生成
+      if (this.thumbnails.size === 0) {
+        this.generateThumbnails();
+      }
     }
   }
 
@@ -748,6 +779,90 @@ class PDFViewer {
         await this.renderOutline(item.items, subContainer, level + 1);
       }
     }
+  }
+
+  // 添加侧边栏拖动调整大小功能
+  initResizeHandlers() {
+    const sidebar = document.querySelector('.sidebar');
+    const resizer = document.createElement('div');
+    resizer.className = 'sidebar-resizer';
+    sidebar.appendChild(resizer);
+
+    let startX;
+    let startWidth;
+    let isDragging = false;
+    let resizeTimeout;
+    let lastWidth = sidebar.offsetWidth;
+
+    const startResize = (e) => {
+      isDragging = true;
+      startX = e.pageX;
+      startWidth = sidebar.offsetWidth;
+      document.body.classList.add('resizing');
+    };
+
+    const stopResize = async () => {
+      if (!isDragging) return;
+      isDragging = false;
+      document.body.classList.remove('resizing');
+
+      const currentWidth = sidebar.offsetWidth;
+      // 只有当宽度真的改变时才重新渲染
+      if (currentWidth !== lastWidth && document.getElementById('sidebarMode').value === 'thumbnails') {
+        clearTimeout(resizeTimeout);
+        try {
+          // 显示加载状态
+          const container = document.getElementById('thumbnailsContainer');
+          const loadingDiv = document.createElement('div');
+          loadingDiv.className = 'thumbnail-loading';
+          loadingDiv.textContent = '加载中...';
+          container.appendChild(loadingDiv);
+
+          // 等待一小段时间确保 DOM 更新
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          // 重新生成缩略图
+          await this.generateThumbnails(currentWidth - 20); // 20 = padding + border
+          
+          // 更新最后的宽度
+          lastWidth = currentWidth;
+        } catch (error) {
+          console.error('Error regenerating thumbnails:', error);
+        } finally {
+          // 移除加载状态
+          const loadingDiv = document.querySelector('.thumbnail-loading');
+          if (loadingDiv) {
+            loadingDiv.remove();
+          }
+        }
+      }
+    };
+
+    const resize = (e) => {
+      if (!isDragging) return;
+      
+      const width = startWidth + (e.pageX - startX);
+      const newWidth = Math.min(Math.max(width, this.minSidebarWidth), this.maxSidebarWidth);
+      sidebar.style.width = `${newWidth}px`;
+      
+      // 实时预览大小调整
+      if (document.getElementById('sidebarMode').value === 'thumbnails') {
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        thumbnails.forEach(thumbnail => {
+          thumbnail.style.width = `${newWidth - 20}px`;
+          const canvas = thumbnail.querySelector('canvas');
+          if (canvas) {
+            canvas.style.width = '100%';
+            canvas.style.height = 'auto';
+          }
+        });
+      }
+    };
+
+    resizer.addEventListener('mousedown', startResize);
+    document.addEventListener('mousemove', resize);
+    document.addEventListener('mouseup', stopResize);
+    document.addEventListener('mouseleave', stopResize);
   }
 }
 
