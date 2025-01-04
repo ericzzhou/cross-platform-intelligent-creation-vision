@@ -34,6 +34,12 @@ class PDFViewer {
     this.initResizeHandlers();
     this.minSidebarWidth = 160; // 最小宽度
     this.maxSidebarWidth = 400; // 最大宽度
+
+    // 设置默认显示模式为缩略图
+    const outlineContainer = document.getElementById('outlineContainer');
+    const thumbnailsContainer = document.getElementById('thumbnailsContainer');
+    outlineContainer.style.display = 'none';
+    thumbnailsContainer.style.display = 'block';
   }
 
   initWindowControls() {
@@ -214,11 +220,9 @@ class PDFViewer {
       document.getElementById('pageCount').textContent = this.pdfDoc.numPages;
       this.pageNum = 1;
       
-      // 生成缩略图和目录
-      await Promise.all([
-        this.generateThumbnails(),
-        this.generateOutline()
-      ]);
+      // 先生成缩略图，再生成目录
+      await this.generateThumbnails();
+      await this.generateOutline();
       
       // 根据视图模式渲染
       if (this.viewMode === 'continuous') {
